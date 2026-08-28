@@ -4,6 +4,15 @@ Interfaz web para el sistema de gestión integral de una distribuidora. Construi
 
 ---
 
+## Despliegue en Producción
+
+El Frontend fue desplegado y se encuentra en producción en **Vercel**, configurado con integración continua (CI/CD) vinculada al repositorio de GitHub.
+
+* **URL de Producción:** [https://programacion-avanzada-proyecto1-frontend-7vqu69o68.vercel.app/](https://programacion-avanzada-proyecto1-frontend-7vqu69o68.vercel.app/)
+* **Plataforma:** Vercel Hosting
+
+---
+
 ## Stack tecnológico
 
 * **Framework/Biblioteca:** React 19.0
@@ -48,18 +57,3 @@ distribuidora-bv-frontend/
 ├── vercel.json                # Configuración para Vercel
 ├── vite.config.ts             # Configuración de Vite
 └── package.json               # Dependencias del proyecto
-
-```
-
-### Local
-```bash
-# Instalar dependencias
-npm install
-
-# Desarrollo con hot-reload
-npm run dev
-
-# Producción
-npm run build
-
-```
