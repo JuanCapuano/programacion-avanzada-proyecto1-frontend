@@ -57,3 +57,28 @@ distribuidora-bv-frontend/
 ├── vercel.json                # Configuración para Vercel
 ├── vite.config.ts             # Configuración de Vite
 └── package.json               # Dependencias del proyecto
+
+```
+### Local
+
+```bash
+
+# Instalar dependencias
+
+npm install
+
+
+
+# Desarrollo con hot-reload
+
+npm run dev
+
+
+
+# Producción
+
+npm run build
+
+
+
+```
