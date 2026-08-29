@@ -62,23 +62,12 @@ distribuidora-bv-frontend/
 ### Local
 
 ```bash
-
 # Instalar dependencias
-
 npm install
 
-
-
 # Desarrollo con hot-reload
-
 npm run dev
 
-
-
 # Producción
-
 npm run build
-
-
-
 ```
