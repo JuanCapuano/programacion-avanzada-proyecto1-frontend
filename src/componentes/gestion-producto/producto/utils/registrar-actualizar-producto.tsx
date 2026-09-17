@@ -48,6 +48,8 @@ export default function RegistrarActualizarProductoForm({
   const [pack, setPack] = useState(false);
   const [usaOferta, setUsaOferta] = useState(false);
   const [lineaSeleccionada, setLineaSeleccionada] = useState<Linea>({} as Linea);
+  const [denominacionPrevisualizada, setDenominacionPrevisualizada] = useState<string>("");
+  const [denominacionEditadaManualmente, setDenominacionEditadaManualmente] = useState(false);
 
   console.log("Configuración del sistema:", configuracion);
 
@@ -90,6 +92,9 @@ export default function RegistrarActualizarProductoForm({
   const cantidadPorPack = watch("cantidadPorPack");
   const utilizaStockMinimo = watch("utilizaStockMinimo");
   const utilizaPack = watch("utilizaPack");
+  const marcaId = watch("marcaId");
+  const lineaId = watch("lineaId");
+  const denominacion = watch("denominacion");
   
 
   //=============================== CONSTANTES PARA MOVIMIENTO ENTRE CAMPOS ==================================
@@ -169,6 +174,27 @@ export default function RegistrarActualizarProductoForm({
 
     fetchData();
   }, [producto]);
+
+  useEffect(() => {
+    // Solo previsualizamos si no editó manualmente y si hay marca y línea
+    if (denominacionEditadaManualmente) return;
+    if (!marcaId || !lineaId) return;
+
+    const previsualizar = async () => {
+      try {
+        const result = await ProductoService.previsualizarDenominacion(marcaId, lineaId);
+        setDenominacionPrevisualizada(result.denominacion);
+      // Si es alta, seteamos la denominacion en el form directamente
+        if (!producto) {
+          setValue("denominacion", result.denominacion);
+        }
+      } catch {
+      // Si falla la previsualización, no hacemos nada
+      }
+    };
+
+      previsualizar();
+  }, [marcaId, lineaId]);
 
   const onSubmit = async (formData: FormValues) => {
     let response: ResponsePost;
@@ -306,23 +332,64 @@ export default function RegistrarActualizarProductoForm({
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)}>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 px-6 py-4">
+              
               {/* Primera fila */}
-              <div className="flex flex-col w-full gap-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 col-span-full">
-                  <div className="col-span-full flex items-end gap-2">
-                    <div className="flex-1">
-                      <FormInput
-                        name="denominacion"
-                        label="Denominación"
-                        placeholder="Ingresa la denominación"
-                        disabled={producto && producto.sistema > 0 ? true : false}
-                        onKeyDown={enterToObservacion}
-                        inputRef={denominacionProductoRef}
-                      />
-                    </div>
 
-                    
+              <div className="col-span-full flex flex-col gap-1">
+
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-medium text-gray-700">Denominación</span>
+                  {producto?.origenDenominacion && (
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    producto.origenDenominacion === 'AUTOMATICA'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {producto.origenDenominacion === 'AUTOMATICA' ? '⚡ Automática' : '✏️ Manual'}
+                  </span>
+                )}
+                </div>
+
+                <div className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <FormInput
+                      name="denominacion"
+                      label=""
+                      placeholder={
+                        denominacionPrevisualizada && !denominacionEditadaManualmente
+                          ? `Se generará: "${denominacionPrevisualizada}"`
+                          : "Dejá vacío para generar automáticamente"
+                      }
+                      disabled={producto && producto.sistema > 0 ? true : false}
+                      onKeyDown={enterToObservacion}
+                      inputRef={denominacionProductoRef}
+                    />
                   </div>
+                  {producto && producto.origenDenominacion === 'MANUAL' && (
+                    <button
+                      type="button"
+                      className="mb-1 px-3 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                      onClick={async () => {
+                        try {
+                          await ProductoService.restaurarDenominacion(producto.id, usuarioId);
+                          await onSuccess("Denominación restaurada automáticamente");
+                          onClose();
+                        } catch {
+                          setError("root", { type: "manual", message: "Error al restaurar la denominación" });
+                        }
+                      }}
+                    >
+                      Restauracion automática
+                    </button>
+                  )}
+                </div>
+
+              {!producto && denominacionPrevisualizada && !denominacionEditadaManualmente && (
+                <p className="text-xs text-blue-600">
+                  Se generará automáticamente: <strong>{denominacionPrevisualizada}</strong>
+                </p>
+              )}
+          </div>
 
                   <FormInput
                     name="codigoProveedor"
@@ -457,7 +524,6 @@ export default function RegistrarActualizarProductoForm({
                       />
                     ) : null}
                   </div>
-                </div>
 
                 <div className="flex flex-wrap gap-6 w-full">
                   <div className="flex items-center gap-2 flex-1 min-w-[140px]">
@@ -504,7 +570,6 @@ export default function RegistrarActualizarProductoForm({
                     />
                   </div>
                 </div>
-              </div>
 
               <div className="flex flex-col w-full gap-2">
 

@@ -63,6 +63,8 @@ export interface Producto {
   precioMayorista: number;
   precioCliente: number;
   precioOferta: number; */
+
+  origenDenominacion?: 'AUTOMATICA' | 'MANUAL' | null;
 }
 
 export interface ConsultarProducto {
@@ -84,6 +86,7 @@ export interface ConsultarProducto {
   precioMayoristaConIva: number;
   precioClienteConIva: number;
   precioOfertaConIva: number;
+  origenDenominacion?: 'AUTOMATICA' | 'MANUAL' | null;
 }
 
 
