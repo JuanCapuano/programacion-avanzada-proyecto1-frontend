@@ -399,6 +399,7 @@ export default function ConsultarProductos() {
       resetearPaginacion();
     }
     setLoading(true);
+    setError(null);
 
     const filtrosConPaginacion = {
       denominacion: valoresFiltros.denominacion,
@@ -414,10 +415,16 @@ export default function ConsultarProductos() {
       take: take,
     };
 
-    const productosFiltrados = await ProductoService.obtener(filtrosConPaginacion);
-    setProductos(productosFiltrados.data);
-    setEntidadesTotales(productosFiltrados.total);
-    setLoading(false);
+    try {
+      const productosFiltrados = await ProductoService.obtener(filtrosConPaginacion);
+      setProductos(productosFiltrados.data);
+      setEntidadesTotales(productosFiltrados.total);
+    } catch (err) {
+      console.error("Error al obtener productos:", err);
+      setError("No se pudieron cargar los productos.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBuscarProductosRapido = async (botonBuscar?: boolean) => {
@@ -426,6 +433,7 @@ export default function ConsultarProductos() {
       resetearPaginacion();
     }
     setLoading(true);
+    setError(null);
 
     const filtrosConPaginacion = {
       codigo: codigo,
@@ -434,10 +442,16 @@ export default function ConsultarProductos() {
       take: take,
     };
 
-    const productosFiltrados = await ProductoService.obtenerRapido(filtrosConPaginacion);
-    setProductos(productosFiltrados.data);
-    setEntidadesTotales(productosFiltrados.total);
-    setLoading(false);
+    try {
+      const productosFiltrados = await ProductoService.obtenerRapido(filtrosConPaginacion);
+      setProductos(productosFiltrados.data);
+      setEntidadesTotales(productosFiltrados.total);
+    } catch (err) {
+      console.error("Error al obtener productos rápido:", err);
+      setError("No se pudieron cargar los productos.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // MANEJO DE PAGINACION ===========================================

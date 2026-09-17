@@ -444,7 +444,7 @@ export default function RegistrarActualizarProductoForm({
                     value={watch("precio") || 0}
                     onChange={(value) => setValue("precio", value, { shouldValidate: true })}
                     maxDigits={9}
-                    disabled={producto && producto.sistema > 0 ? true : false}
+                    disabled={true}
                   />
                   <PorcentajeInput
                     name="porcentaje"
@@ -543,7 +543,7 @@ export default function RegistrarActualizarProductoForm({
                       label="Stock Crítico"
                       value={stockMinimo || 0}
                       onChange={(value) => setValue(`stockMinimo`, Number(value))}
-                      disabled={utilizaStockMinimo ? false : true}
+                      disabled={/*utilizaStockMinimo ? false : */true}
                     />
                   </div>
 
@@ -566,7 +566,7 @@ export default function RegistrarActualizarProductoForm({
                       label="Cantidad Pack"
                       value={cantidadPorPack || 0}
                       onChange={(value) => setValue(`cantidadPorPack`, Number(value))}
-                      disabled={utilizaPack ? false : true}
+                      disabled={/*utilizaPack ? false : */true}
                     />
                   </div>
                 </div>
