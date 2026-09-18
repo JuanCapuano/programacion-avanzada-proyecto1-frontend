@@ -14,6 +14,8 @@ import { SelectMarca } from "../../../../interfaces/gestion-producto/marca/inter
 import { Linea, SelectLinea } from "../../../../interfaces/gestion-producto/linea/interfaces-linea";
 import { AlicuotaIva, ResponsePost } from "../../../../interfaces/generales/interfaces-generales";
 import Select from "react-select";
+import { NumericFormat } from "react-number-format";
+import { Label } from "../../../ui/Label";
 import { useEnterFocus } from "../../../herramientas/formateo-de-campos/movimiento-campos";
 import { useConfiguracionSistema } from "../../../sistema/ConfiguracionSistemaContext";
 import { parseApiError } from "../../../../utils/errores";
@@ -22,7 +24,7 @@ import RegistrarActualizarMarcaForm from "../../marca/utils/registrar-actualizar
 import { ItemProveedor } from "../../../../interfaces/gestion-producto/producto/interfaces-item-proveedor";
 import { SelectSublinea } from "../../../../interfaces/gestion-producto/sublinea/interfaces-sublinea";
 import { ItemsProveedorEnPayload } from "../interfaces/interfaces-validaciones-item-proveedor";
-import { FormValues, schema, transformData, transformarItemsProdAlternativo } from "../interfaces/interfaces-validaciones-producto";
+import { FormValues, schema, transformData, transformarItemsProdAlternativo, UNIDADES_MEDIDA, PORCENTAJE_DEFAULT } from "../interfaces/interfaces-validaciones-producto";
 import LineasSelector from "../componentes/configuracion/lineas-selector";
 import EncabezadoFormularios from "../../../ui/encabezadoFormularios";
 import MarcasSelector from "../componentes/configuracion/marcas-selector";
@@ -59,6 +61,7 @@ export default function RegistrarActualizarProductoForm({
       ? transformData(producto)
       : {
           alicuotaIva: AlicuotaIva.ALICUOTA_21,
+          porcentaje: PORCENTAJE_DEFAULT,
         },
   });
 
@@ -95,6 +98,8 @@ export default function RegistrarActualizarProductoForm({
   const marcaId = watch("marcaId");
   const lineaId = watch("lineaId");
   const denominacion = watch("denominacion");
+  const presentacionCantidad = watch("presentacionCantidad");
+  const presentacionUnidad = watch("presentacionUnidad");
   
 
   //=============================== CONSTANTES PARA MOVIMIENTO ENTRE CAMPOS ==================================
@@ -155,7 +160,10 @@ export default function RegistrarActualizarProductoForm({
           setValue("codigoBarra", producto.codigoBarra || null);
           setValue("stock", producto.stock || 0);
           setValue("costo", producto.costo || 0);
-          
+          setValue("porcentaje", producto.porcentaje ?? PORCENTAJE_DEFAULT);
+          setValue("presentacionCantidad", producto.presentacionCantidad || 0);
+          setValue("presentacionUnidad", producto.presentacionUnidad || "");
+
           //setValue("oferta", producto.oferta || false);
           setValue("alicuotaIva", producto.alicuotaIva || 0);
 
@@ -182,7 +190,12 @@ export default function RegistrarActualizarProductoForm({
 
     const previsualizar = async () => {
       try {
-        const result = await ProductoService.previsualizarDenominacion(marcaId, lineaId);
+        const result = await ProductoService.previsualizarDenominacion(
+          marcaId,
+          lineaId,
+          presentacionCantidad || undefined,
+          presentacionUnidad || undefined,
+        );
         setDenominacionPrevisualizada(result.denominacion);
       // Si es alta, seteamos la denominacion en el form directamente
         if (!producto) {
@@ -194,7 +207,7 @@ export default function RegistrarActualizarProductoForm({
     };
 
       previsualizar();
-  }, [marcaId, lineaId]);
+  }, [marcaId, lineaId, presentacionCantidad, presentacionUnidad]);
 
   const onSubmit = async (formData: FormValues) => {
     let response: ResponsePost;
@@ -269,6 +282,11 @@ export default function RegistrarActualizarProductoForm({
     }
   };
 
+  useEffect(() => {
+    handleBuscarPorDenominacion("LINEA");
+    handleBuscarPorDenominacion("MARCA");
+  }, []);
+
   const handleEnterEnSelect = async (e: React.KeyboardEvent<HTMLInputElement>, select: string) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -331,65 +349,68 @@ export default function RegistrarActualizarProductoForm({
         {/* Formulario */}
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 px-6 py-4">
-              
-              {/* Primera fila */}
+            <CardContent className="flex flex-col gap-5 px-6 py-4">
 
-              <div className="col-span-full flex flex-col gap-1">
+              {/* ===== Datos Generales ===== */}
+              <section className="border border-gray-200 rounded-lg p-4">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Datos Generales</h3>
 
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium text-gray-700">Denominación</span>
-                  {producto?.origenDenominacion && (
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    producto.origenDenominacion === 'AUTOMATICA'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {producto.origenDenominacion === 'AUTOMATICA' ? '⚡ Automática' : '✏️ Manual'}
-                  </span>
-                )}
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2 flex flex-col gap-1">
 
-                <div className="flex items-end gap-2">
-                  <div className="flex-1">
-                    <FormInput
-                      name="denominacion"
-                      label=""
-                      placeholder={
-                        denominacionPrevisualizada && !denominacionEditadaManualmente
-                          ? `Se generará: "${denominacionPrevisualizada}"`
-                          : "Dejá vacío para generar automáticamente"
-                      }
-                      disabled={producto && producto.sistema > 0 ? true : false}
-                      onKeyDown={enterToObservacion}
-                      inputRef={denominacionProductoRef}
-                    />
-                  </div>
-                  {producto && producto.origenDenominacion === 'MANUAL' && (
-                    <button
-                      type="button"
-                      className="mb-1 px-3 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                      onClick={async () => {
-                        try {
-                          await ProductoService.restaurarDenominacion(producto.id, usuarioId);
-                          await onSuccess("Denominación restaurada automáticamente");
-                          onClose();
-                        } catch {
-                          setError("root", { type: "manual", message: "Error al restaurar la denominación" });
-                        }
-                      }}
-                    >
-                      Restauracion automática
-                    </button>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-medium text-gray-700">Denominación</span>
+                      {producto?.origenDenominacion && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        producto.origenDenominacion === 'AUTOMATICA'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {producto.origenDenominacion === 'AUTOMATICA' ? '⚡ Automática' : '✏️ Manual'}
+                      </span>
+                    )}
+                    </div>
+
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <FormInput
+                          name="denominacion"
+                          label=""
+                          placeholder={
+                            denominacionPrevisualizada && !denominacionEditadaManualmente
+                              ? `Se generará: "${denominacionPrevisualizada}"`
+                              : "Dejá vacío para generar automáticamente"
+                          }
+                          disabled={producto && producto.sistema > 0 ? true : false}
+                          onKeyDown={enterToObservacion}
+                          inputRef={denominacionProductoRef}
+                        />
+                      </div>
+                      {producto && producto.origenDenominacion === 'MANUAL' && (
+                        <button
+                          type="button"
+                          className="mb-1 px-3 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                          onClick={async () => {
+                            try {
+                              await ProductoService.restaurarDenominacion(producto.id, usuarioId);
+                              await onSuccess("Denominación restaurada automáticamente");
+                              onClose();
+                            } catch {
+                              setError("root", { type: "manual", message: "Error al restaurar la denominación" });
+                            }
+                          }}
+                        >
+                          Restauracion automática
+                        </button>
+                      )}
+                    </div>
+
+                  {!producto && denominacionPrevisualizada && !denominacionEditadaManualmente && (
+                    <p className="text-xs text-blue-600">
+                      Se generará automáticamente: <strong>{denominacionPrevisualizada}</strong>
+                    </p>
                   )}
-                </div>
-
-              {!producto && denominacionPrevisualizada && !denominacionEditadaManualmente && (
-                <p className="text-xs text-blue-600">
-                  Se generará automáticamente: <strong>{denominacionPrevisualizada}</strong>
-                </p>
-              )}
-          </div>
+                  </div>
 
                   <FormInput
                     name="codigoProveedor"
@@ -411,51 +432,6 @@ export default function RegistrarActualizarProductoForm({
                     inputRef={codigoBarraRef}
                     onKeyDown={(e) => handleEnterEnSelect(e, "ALICUOTA-IVA")}
                   />
-
-                  {/* <FormInput
-                    name="costo"
-                    label="Costo"
-                    placeholder="Ingresa el costo"
-                  />
-
-                  <FormInput
-                    name="precio"
-                    label="Precio"
-                    placeholder="Ingresa el precio"
-                  />
-
-                  <FormInput
-                    name="porcentaje"
-                    label="Porcentaje"
-                    placeholder="Ingresa el porcentaje"
-                  /> */}
-
-                  <PriceInput
-                    name="costo"
-                    label="Costo"
-                    value={watch("costo") || 0}
-                    onChange={(value) => setValue("costo", value, { shouldValidate: true })}
-                    maxDigits={9}
-                    disabled={producto && producto.sistema > 0 ? true : false}
-                  />
-                  <PriceInput
-                    name="precio"
-                    label="Precio"
-                    value={watch("precio") || 0}
-                    onChange={(value) => setValue("precio", value, { shouldValidate: true })}
-                    maxDigits={9}
-                    disabled={true}
-                  />
-                  <PorcentajeInput
-                    name="porcentaje"
-                    label="Porcentaje"
-                    value={watch("porcentaje") || 0}
-                    onChange={(value) => setValue("porcentaje", value, { shouldValidate: true })}
-                    disabled={producto && producto.sistema > 0 ? true : false}
-                  />
-
-                  
-
 
                   <FormInput
                     name="ubicacion"
@@ -512,9 +488,149 @@ export default function RegistrarActualizarProductoForm({
                       )}
                     </div>
                   </div>
+                </div>
+              </section>
 
-                  <div className="flex-1 min-w-[120px]">
-                    {producto ? (
+              {/* ===== Costo y Porcentaje ===== */}
+              <section className="border border-gray-200 rounded-lg p-4">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Costo y Porcentaje</h3>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <PriceInput
+                    name="costo"
+                    label="Costo"
+                    value={watch("costo") || 0}
+                    onChange={(value) => setValue("costo", value, { shouldValidate: true })}
+                    maxDigits={9}
+                    disabled={producto && producto.sistema > 0 ? true : false}
+                  />
+                  <PorcentajeInput
+                    name="porcentaje"
+                    label="Porcentaje"
+                    value={watch("porcentaje") || 0}
+                    onChange={(value) => setValue("porcentaje", value, { shouldValidate: true })}
+                    disabled={producto && producto.sistema > 0 ? true : false}
+                  />
+                </div>
+              </section>
+
+              {/* ===== Presentación ===== */}
+              <section className="border border-gray-200 rounded-lg p-4">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Presentación</h3>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-1 sm:space-y-2">
+                    <Label htmlFor="presentacionCantidad" className="label-base">
+                      Cantidad
+                    </Label>
+                    <div className="relative">
+                      <NumericFormat
+                        id="presentacionCantidad"
+                        value={watch("presentacionCantidad") ?? 0}
+                        thousandSeparator="."
+                        decimalSeparator=","
+                        allowedDecimalSeparators={[",", "."]}
+                        decimalScale={2}
+                        allowNegative={false}
+                        disabled={producto && producto.sistema > 0 ? true : false}
+                        onValueChange={(values) => setValue("presentacionCantidad", values.floatValue ?? 0, { shouldValidate: true })}
+                        className={
+                          producto && producto.sistema > 0
+                            ? "w-full text-right p-2 border border-gray-300 bg-gray-300 rounded-md text-black"
+                            : "w-full text-right p-2 border border-gray-300 bg-white rounded-md text-black"
+                        }
+                      />
+                      {errors.presentacionCantidad && (
+                        <small className="text-red-500">{errors.presentacionCantidad?.message as string}</small>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">Unidad</label>
+                    <Select
+                      value={
+                        UNIDADES_MEDIDA.map((u) => ({ id: u, denominacion: u })).find(
+                          (option) => option.id === watch("presentacionUnidad"),
+                        ) || null
+                      }
+                      options={UNIDADES_MEDIDA.map((u) => ({ id: u, denominacion: u }))}
+                      getOptionLabel={(option) => option.denominacion}
+                      getOptionValue={(option) => option.id}
+                      isDisabled={producto && producto.sistema > 0 ? true : false}
+                      onChange={(selectedOption) => {
+                        setValue("presentacionUnidad", selectedOption?.id || "", { shouldValidate: true });
+                      }}
+                      className="text-black"
+                      menuPortalTarget={document.body}
+                      styles={{
+                        control: (base) => ({ ...base, color: "black" }),
+                        singleValue: (base) => ({ ...base, color: "black" }),
+                        option: (base, { isSelected, isFocused }) => ({
+                          ...base,
+                          color: isSelected ? "white" : "black",
+                          backgroundColor: isSelected ? "#3b82f6" : isFocused ? "#93c5fd" : "white",
+                        }),
+                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                      }}
+                    />
+                    {errors.presentacionUnidad && (
+                      <small className="text-red-500">{errors.presentacionUnidad?.message as string}</small>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              {/* ===== Clasificación ===== */}
+              <section className="border border-gray-200 rounded-lg p-4">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Clasificación</h3>
+
+                <div className="flex flex-col gap-3">
+                  <LineasSelector
+                    denominacionLinea={denominacionLinea}
+                    setDenominacionLinea={setDenominacionLinea}
+                    denominacionLineaRef={denominacionLineaRef}
+                    selectLineaRef={selectLineaRef}
+                    lineas={lineas}
+                    selectedLinea={selectedLinea}
+                    lineaId={watch("lineaId")}
+                    disabled={producto && producto.sistema > 0}
+                    errors={errors}
+                    onEnterLinea={(e) => handleEnterEnSelect(e, "LINEA")}
+                    onEnterDenominacion={enterToDenominacionMarca}
+                    onLineaChange={(linea) => {
+                      methods.setValue("lineaId", linea?.id || 0);
+                      setLineaSeleccionada(linea as any);
+                    }}
+                    onAgregarLinea={() => setMostrarFormularioLinea(true)}
+                  />
+
+                  <MarcasSelector
+                    denominacionMarca={denominacionMarca}
+                    setDenominacionMarca={setDenominacionMarca}
+                    denominacionMarcaRef={denominacionMarcaRef}
+                    selectMarcaRef={selectMarcaRef}
+                    marcas={marcas}
+                    selectedMarca={selectedMarca}
+                    marcaId={watch("marcaId")}
+                    disabled={producto && producto.sistema > 0}
+                    error={errors.marcaId?.message}
+                    onEnterMarca={(e) => handleEnterEnSelect(e, "MARCA")}
+                    onChangeMarca={(marca) => {
+                      methods.setValue("marcaId", marca?.id || 0);
+                    }}
+                    onAgregarMarca={() => setMostrarFormularioMarca(true)}
+                  />
+                </div>
+              </section>
+
+              {/* ===== Stock y Empaque ===== */}
+              <section className="border border-gray-200 rounded-lg p-4">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Stock y Empaque</h3>
+
+                <div className="flex flex-wrap gap-6 w-full">
+                  {producto ? (
+                    <div className="flex-1 min-w-[120px]">
                       <CantidadesInput
                         name={`stock`}
                         label="Stock"
@@ -522,12 +638,11 @@ export default function RegistrarActualizarProductoForm({
                         onChange={(value) => setValue(`stock`, Number(value))}
                         disabled={true}
                       />
-                    ) : null}
-                  </div>
+                    </div>
+                  ) : null}
 
-                <div className="flex flex-wrap gap-6 w-full">
                   <div className="flex items-center gap-2 flex-1 min-w-[140px]">
-                    <div className="col-span-full flex flex-wrap gap-4 mt-8">
+                    <div className="flex flex-wrap gap-4 mt-8">
                       <label className="flex items-center space-x-2">
                         <input
                           type="checkbox"
@@ -547,10 +662,8 @@ export default function RegistrarActualizarProductoForm({
                     />
                   </div>
 
-                  
-
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-1 min-w-[140px]">
-                    <div className="col-span-full flex flex-wrap gap-4 mt-8">
+                    <div className="flex flex-wrap gap-4 mt-8">
                       <label className="flex items-center space-x-2">
                         <input
                           type="checkbox"
@@ -570,54 +683,8 @@ export default function RegistrarActualizarProductoForm({
                     />
                   </div>
                 </div>
+              </section>
 
-              <div className="flex flex-col w-full gap-2">
-
-              <LineasSelector
-                denominacionLinea={denominacionLinea}
-                setDenominacionLinea={setDenominacionLinea}
-                denominacionLineaRef={denominacionLineaRef}
-                selectLineaRef={selectLineaRef}
-                lineas={lineas}
-                selectedLinea={selectedLinea}
-                lineaId={watch("lineaId")}
-                disabled={producto && producto.sistema > 0}
-                errors={errors}
-                onEnterLinea={(e) => handleEnterEnSelect(e, "LINEA")}
-                onEnterDenominacion={enterToDenominacionMarca}
-                onLineaChange={(linea) => {
-                  methods.setValue("lineaId", linea?.id || 0);
-                  setLineaSeleccionada(linea as any);
-                }}
-                onAgregarLinea={() => setMostrarFormularioLinea(true)}
-              />
-
-              <MarcasSelector
-                denominacionMarca={denominacionMarca}
-                setDenominacionMarca={setDenominacionMarca}
-                denominacionMarcaRef={denominacionMarcaRef}
-                selectMarcaRef={selectMarcaRef}
-                marcas={marcas}
-                selectedMarca={selectedMarca}
-                marcaId={watch("marcaId")}
-                disabled={producto && producto.sistema > 0}
-                error={errors.marcaId?.message}
-                onEnterMarca={(e) => handleEnterEnSelect(e, "MARCA")}
-                onChangeMarca={(marca) => {
-                  methods.setValue("marcaId", marca?.id || 0);
-                }}
-                onAgregarMarca={() => setMostrarFormularioMarca(true)}
-              />
-
-              </div>
-
-              {/* Segunda fila */}
-
-
-              <hr className="col-span-full my-2 border-gray-300" />
-
-              
-              
             </CardContent>
 
             {errors.root?.message && <div className="text-red-600 text-center mb-4">{String(errors.root.message)}</div>}

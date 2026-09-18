@@ -138,8 +138,24 @@ export default function RegistrarActualizarLineaForm({
                 </div>
 
                 <div className="flex items-end gap-2 lg:col-span-1">
-                  <label className="flex items-center pb-2">
+                  <label className="flex items-center gap-2 pb-2">
+                    <input
+                      type="checkbox"
+                      {...methods.register("utilizaStockMinimo")}
+                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">Utiliza Stock Mínimo</span>
                   </label>
+                </div>
+
+                <div className="lg:col-span-1">
+                  <CantidadesInput
+                    name="stockMinimo"
+                    label="Stock Mínimo"
+                    value={stockMinimo || 0}
+                    onChange={(value) => setValue("stockMinimo", Number(value))}
+                    disabled={!utilizaStockMinimo}
+                  />
                 </div>
               </CardContent>
               {errors.root?.message && (

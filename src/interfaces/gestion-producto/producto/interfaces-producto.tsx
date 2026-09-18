@@ -17,6 +17,8 @@ export interface Producto {
   costo?: number | null;
   precio?: number | null;
   porcentaje?: number | null;
+  presentacionCantidad?: number | null;
+  presentacionUnidad?: string | null;
   //fechaCosto?: string | null;
  /*  costoEnDolar: boolean;
   costoDolar?: number | null;
