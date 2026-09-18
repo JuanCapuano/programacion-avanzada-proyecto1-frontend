@@ -115,6 +115,8 @@ export default function RegistrarActualizarProductoForm({
   const selectLineaRef = useRef<HTMLDivElement>(null);
   const denominacionMarcaRef = useRef<HTMLInputElement>(null);
   const selectMarcaRef = useRef<HTMLDivElement>(null);
+  const usuarioEditoManualmente = useRef(false);
+  const denominacionManualRef = useRef<string>("");
 
   const enterToObservacion = useEnterFocus(observacionRef);
   const enterToPrecioOferta = useEnterFocus(precioOfertaRef);
@@ -207,7 +209,7 @@ export default function RegistrarActualizarProductoForm({
         );
         setDenominacionPrevisualizada(result.denominacion);
       // Si es alta, seteamos la denominacion en el form directamente
-        if (!producto) {
+        if (!producto && !denominacionEditadaManualmente) {
           setValue("denominacion", result.denominacion);
         }
       } catch {
@@ -219,6 +221,8 @@ export default function RegistrarActualizarProductoForm({
   }, [marcaId, lineaId, presentacionCantidad, presentacionUnidad]);
 
   const onSubmit = async (formData: FormValues) => {
+    console.log("denominacionEditadaManualmente:", denominacionEditadaManualmente);
+    console.log("formData.denominacion:", formData.denominacion);
     let response: ResponsePost;
 
     try {
@@ -241,7 +245,7 @@ export default function RegistrarActualizarProductoForm({
         const payload = {
           ...formData,
           usuarioUpdatedId: usuarioId,
-          denominacion: denominacionEditadaManualmente ? formData.denominacion : undefined,
+          denominacion: usuarioEditoManualmente.current ? denominacionManualRef.current : undefined,
         };
 
         response = await ProductoService.actualizar(producto.id, payload);
@@ -249,9 +253,10 @@ export default function RegistrarActualizarProductoForm({
         const payload = {
           ...formData,
           usuarioCreatedId: usuarioId,
-          denominacion: denominacionEditadaManualmente ? formData.denominacion : undefined,
+          denominacion: usuarioEditoManualmente.current ? denominacionManualRef.current : undefined,
         };
 
+        
         response = await ProductoService.nuevo(payload);
       }
 
@@ -395,6 +400,10 @@ export default function RegistrarActualizarProductoForm({
                           disabled={producto && producto.sistema > 0 ? true : false}
                           onKeyDown={enterToObservacion}
                           inputRef={denominacionProductoRef}
+                          onChange={(e) => { 
+                          usuarioEditoManualmente.current = true;
+                          denominacionManualRef.current = e.target.value;
+                          }}
                         />
                       </div>
                       {producto && producto.origenDenominacion === 'MANUAL' && (
