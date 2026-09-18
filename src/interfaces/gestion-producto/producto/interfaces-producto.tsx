@@ -89,6 +89,8 @@ export interface ConsultarProducto {
   precioClienteConIva: number;
   precioOfertaConIva: number;
   origenDenominacion?: 'AUTOMATICA' | 'MANUAL' | null;
+  presentacionCantidad?: number | null;
+  presentacionUnidad?: string | null;
 }
 
 

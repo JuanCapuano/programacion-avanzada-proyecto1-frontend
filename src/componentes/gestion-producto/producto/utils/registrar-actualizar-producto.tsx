@@ -50,7 +50,7 @@ export default function RegistrarActualizarProductoForm({
   const [pack, setPack] = useState(false);
   const [usaOferta, setUsaOferta] = useState(false);
   const [lineaSeleccionada, setLineaSeleccionada] = useState<Linea>({} as Linea);
-  const [denominacionPrevisualizada, setDenominacionPrevisualizada] = useState<string>("");
+  const [denominacionPrevisualizada, setDenominacionPrevisualizada] = useState<string>(producto?.denominacion ?? "" );
   const [denominacionEditadaManualmente, setDenominacionEditadaManualmente] = useState(false);
 
   console.log("Configuración del sistema:", configuracion);
@@ -144,6 +144,15 @@ export default function RegistrarActualizarProductoForm({
   }, [utilizaPack, utilizaStockMinimo, false]);
 
   useEffect(() => {
+    if (!denominacionPrevisualizada) return;
+    if (denominacion !== denominacionPrevisualizada) {
+      setDenominacionEditadaManualmente(true);
+    } else {
+      setDenominacionEditadaManualmente(false);
+    }
+  }, [denominacion]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         if (producto) {
@@ -232,6 +241,7 @@ export default function RegistrarActualizarProductoForm({
         const payload = {
           ...formData,
           usuarioUpdatedId: usuarioId,
+          denominacion: denominacionEditadaManualmente ? formData.denominacion : undefined,
         };
 
         response = await ProductoService.actualizar(producto.id, payload);
@@ -239,6 +249,7 @@ export default function RegistrarActualizarProductoForm({
         const payload = {
           ...formData,
           usuarioCreatedId: usuarioId,
+          denominacion: denominacionEditadaManualmente ? formData.denominacion : undefined,
         };
 
         response = await ProductoService.nuevo(payload);
@@ -585,25 +596,25 @@ export default function RegistrarActualizarProductoForm({
               <section className="border border-gray-200 rounded-lg p-4">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Clasificación</h3>
 
-                <div className="flex flex-col gap-3">
-                  <LineasSelector
-                    denominacionLinea={denominacionLinea}
-                    setDenominacionLinea={setDenominacionLinea}
-                    denominacionLineaRef={denominacionLineaRef}
-                    selectLineaRef={selectLineaRef}
-                    lineas={lineas}
-                    selectedLinea={selectedLinea}
-                    lineaId={watch("lineaId")}
-                    disabled={producto && producto.sistema > 0}
-                    errors={errors}
-                    onEnterLinea={(e) => handleEnterEnSelect(e, "LINEA")}
-                    onEnterDenominacion={enterToDenominacionMarca}
-                    onLineaChange={(linea) => {
-                      methods.setValue("lineaId", linea?.id || 0);
-                      setLineaSeleccionada(linea as any);
-                    }}
-                    onAgregarLinea={() => setMostrarFormularioLinea(true)}
-                  />
+                  <div className="flex flex-col gap-3">
+                    <LineasSelector
+                      denominacionLinea={denominacionLinea}
+                      setDenominacionLinea={setDenominacionLinea}
+                      denominacionLineaRef={denominacionLineaRef}
+                      selectLineaRef={selectLineaRef}
+                      lineas={lineas}
+                      selectedLinea={selectedLinea}
+                      lineaId={watch("lineaId")}
+                      disabled={producto && producto.sistema > 0}
+                      errors={errors}
+                      onEnterLinea={(e) => handleEnterEnSelect(e, "LINEA")}
+                      onEnterDenominacion={enterToDenominacionMarca}
+                      onLineaChange={(linea) => {
+                        methods.setValue("lineaId", linea?.id || 0);
+                        setLineaSeleccionada(linea as any);
+                      }}
+                      onAgregarLinea={() => setMostrarFormularioLinea(true)}
+                    />
 
                   <MarcasSelector
                     denominacionMarca={denominacionMarca}
