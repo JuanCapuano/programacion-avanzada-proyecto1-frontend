@@ -106,9 +106,9 @@ export default function RegistrarActualizarProductoForm({
   const denominacionProductoRef = useRef<HTMLInputElement>(null);
   useEnterFocus(denominacionProductoRef);
   const observacionRef = useRef<HTMLInputElement>(null);
-  const ubicacionRef = useRef<HTMLInputElement>(null);
+  //const ubicacionRef = useRef<HTMLInputElement>(null);
   const selectTipoProductoRef = useRef<HTMLDivElement>(null);
-  const codigoBarraRef = useRef<HTMLInputElement>(null);
+  //const codigoBarraRef = useRef<HTMLInputElement>(null);
   const selectAlicuotaIvaRef = useRef<HTMLDivElement>(null);
   const precioOfertaRef = useRef<HTMLInputElement>(null);
   const denominacionLineaRef = useRef<HTMLInputElement>(null);
@@ -439,28 +439,6 @@ export default function RegistrarActualizarProductoForm({
                     disabled={producto && producto.sistema > 0 ? true : false}
                   />
 
-                  <FormInput
-                    name="codigoReferencia"
-                    label="Codigo Referencia"
-                    placeholder="Ingresa el codigo de referencia"
-                  />
-
-                  <FormInput
-                    name="codigoBarra"
-                    label="Código De Barra"
-                    placeholder="Ingresa el código de barra (opcional)"
-                    inputRef={codigoBarraRef}
-                    onKeyDown={(e) => handleEnterEnSelect(e, "ALICUOTA-IVA")}
-                  />
-
-                  <FormInput
-                    name="ubicacion"
-                    label="Ubicación"
-                    placeholder="Ingresa una ubicación (opcional)"
-                    onKeyDown={(e) => handleEnterEnSelect(e, "TIPO-PRODUCTO")}
-                    inputRef={ubicacionRef}
-                  />
-
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">Alicuota IVA</label>
                     <div ref={selectAlicuotaIvaRef} className="w-full">
@@ -511,11 +489,54 @@ export default function RegistrarActualizarProductoForm({
                 </div>
               </section>
 
+              {/* ===== Clasificación ===== */}
+              <section className="border border-gray-200 rounded-lg p-4">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Clasificación</h3>
+
+                  <div className="flex flex-col gap-3">
+                    <LineasSelector
+                      denominacionLinea={denominacionLinea}
+                      setDenominacionLinea={setDenominacionLinea}
+                      denominacionLineaRef={denominacionLineaRef}
+                      selectLineaRef={selectLineaRef}
+                      lineas={lineas}
+                      selectedLinea={selectedLinea}
+                      lineaId={watch("lineaId")}
+                      disabled={producto && producto.sistema > 0}
+                      errors={errors}
+                      onEnterLinea={(e) => handleEnterEnSelect(e, "LINEA")}
+                      onEnterDenominacion={enterToDenominacionMarca}
+                      onLineaChange={(linea) => {
+                        methods.setValue("lineaId", linea?.id || 0);
+                        setLineaSeleccionada(linea as any);
+                      }}
+                      onAgregarLinea={() => setMostrarFormularioLinea(true)}
+                    />
+
+                  <MarcasSelector
+                    denominacionMarca={denominacionMarca}
+                    setDenominacionMarca={setDenominacionMarca}
+                    denominacionMarcaRef={denominacionMarcaRef}
+                    selectMarcaRef={selectMarcaRef}
+                    marcas={marcas}
+                    selectedMarca={selectedMarca}
+                    marcaId={watch("marcaId")}
+                    disabled={producto && producto.sistema > 0}
+                    error={errors.marcaId?.message}
+                    onEnterMarca={(e) => handleEnterEnSelect(e, "MARCA")}
+                    onChangeMarca={(marca) => {
+                      methods.setValue("marcaId", marca?.id || 0);
+                    }}
+                    onAgregarMarca={() => setMostrarFormularioMarca(true)}
+                  />
+                </div>
+              </section>
+
               {/* ===== Costo y Porcentaje ===== */}
               <section className="border border-gray-200 rounded-lg p-4">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Costo y Porcentaje</h3>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
                   <PriceInput
                     name="costo"
                     label="Costo"
@@ -538,7 +559,7 @@ export default function RegistrarActualizarProductoForm({
               <section className="border border-gray-200 rounded-lg p-4">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Presentación</h3>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
                   <div className="space-y-1 sm:space-y-2">
                     <Label htmlFor="presentacionCantidad" className="label-base">
                       Cantidad
@@ -598,49 +619,6 @@ export default function RegistrarActualizarProductoForm({
                       <small className="text-red-500">{errors.presentacionUnidad?.message as string}</small>
                     )}
                   </div>
-                </div>
-              </section>
-
-              {/* ===== Clasificación ===== */}
-              <section className="border border-gray-200 rounded-lg p-4">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Clasificación</h3>
-
-                  <div className="flex flex-col gap-3">
-                    <LineasSelector
-                      denominacionLinea={denominacionLinea}
-                      setDenominacionLinea={setDenominacionLinea}
-                      denominacionLineaRef={denominacionLineaRef}
-                      selectLineaRef={selectLineaRef}
-                      lineas={lineas}
-                      selectedLinea={selectedLinea}
-                      lineaId={watch("lineaId")}
-                      disabled={producto && producto.sistema > 0}
-                      errors={errors}
-                      onEnterLinea={(e) => handleEnterEnSelect(e, "LINEA")}
-                      onEnterDenominacion={enterToDenominacionMarca}
-                      onLineaChange={(linea) => {
-                        methods.setValue("lineaId", linea?.id || 0);
-                        setLineaSeleccionada(linea as any);
-                      }}
-                      onAgregarLinea={() => setMostrarFormularioLinea(true)}
-                    />
-
-                  <MarcasSelector
-                    denominacionMarca={denominacionMarca}
-                    setDenominacionMarca={setDenominacionMarca}
-                    denominacionMarcaRef={denominacionMarcaRef}
-                    selectMarcaRef={selectMarcaRef}
-                    marcas={marcas}
-                    selectedMarca={selectedMarca}
-                    marcaId={watch("marcaId")}
-                    disabled={producto && producto.sistema > 0}
-                    error={errors.marcaId?.message}
-                    onEnterMarca={(e) => handleEnterEnSelect(e, "MARCA")}
-                    onChangeMarca={(marca) => {
-                      methods.setValue("marcaId", marca?.id || 0);
-                    }}
-                    onAgregarMarca={() => setMostrarFormularioMarca(true)}
-                  />
                 </div>
               </section>
 
