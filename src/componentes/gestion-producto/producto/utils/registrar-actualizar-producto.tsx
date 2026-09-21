@@ -48,6 +48,8 @@ export default function RegistrarActualizarProductoForm({
   const [pack, setPack] = useState(false);
   const [usaOferta, setUsaOferta] = useState(false);
   const [lineaSeleccionada, setLineaSeleccionada] = useState<Linea>({} as Linea);
+  const precioOriginal = useRef<number>(producto?.precio ?? 0);
+  const costoOriginal = useRef<number>(producto?.costo ?? 0);
 
   console.log("Configuración del sistema:", configuracion);
 
@@ -189,14 +191,39 @@ export default function RegistrarActualizarProductoForm({
         if (!confirmar) return; // el usuario canceló
       }
 
-      if (producto) {
-        const payload = {
-          ...formData,
-          usuarioUpdatedId: usuarioId,
-        };
+    if (producto) {
+      const { motivo, ...formDataSinMotivo } = formData; // ← separás motivo
+      // registrar historial si el precio cambió
+      const precioNuevo = formData.precio ?? 0;
+      if (precioNuevo !== precioOriginal.current) {
+        if (!motivo?.trim()) {
+          setError("motivo", {
+            type: "manual",
+            message: "El motivo es obligatorio cuando se modifica el precio.",
+          });
+          return;
+        }
+      const payload = {
+        ...formDataSinMotivo,
+        usuarioUpdatedId: usuarioId,
+      };
 
-        response = await ProductoService.actualizar(producto.id, payload);
-      } else {
+      response = await ProductoService.actualizar(producto.id, payload);
+
+
+        await ProductoService.actualizarPreciosProducto(producto.id, {
+          precio: precioNuevo,
+          precioAnterior: precioOriginal.current,
+          costo: formData.costo ?? 0,
+          costoDolar: 0,
+          cotizacionDolar: 0,
+          porcentaje: formData.porcentaje ?? 0,
+          motivo,
+          usuarioId: usuarioId,
+        });
+      }
+    }
+       else {
         const payload = {
           ...formData,
           usuarioCreatedId: usuarioId,
@@ -386,6 +413,13 @@ export default function RegistrarActualizarProductoForm({
                     onChange={(value) => setValue("porcentaje", value, { shouldValidate: true })}
                     disabled={producto && producto.sistema > 0 ? true : false}
                   />
+                  {producto && (
+                  <FormInput
+                    name="motivo"
+                    label="Motivo del cambio de precio (si modificaste el precio)"
+                    placeholder="Ej: Aumento de costos del proveedor"
+                  />
+                )}
 
                   
 

@@ -31,6 +31,7 @@ export interface FormValues {
   cantidadPorPack?: number;
   utilizaStockMinimo?: boolean;
   utilizaPack?: boolean;
+  motivo?: string | null;
  /*  porcentajeOcasional: number;
   precioOcasional: number;
   porcentajeMayorista: number;
@@ -69,7 +70,9 @@ export const schema = (utilizaStockMinimo: boolean, utilizaPack: boolean, usaOfe
       const {costo} = this.parent;
       if (value==null || costo == null ) return true;
       return value>= costo;
+
     }),
+    motivo: yup.string().optional().nullable().max(500, "Máximo 500 caracteres."),
     porcentaje: yup.number().typeError("El porcentaje debe ser un valor númerico").min(0,"El porcentaje mínimo debe ser mayor o igual a 0").max(999, "El porcentaje máximo permitido es de 999").optional().nullable(),
     /* costoEnDolar: yup.boolean().optional().nullable(),
     costoDolar: yup.number().optional().nullable(),
