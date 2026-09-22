@@ -17,7 +17,6 @@ type FormInputProps = {
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   inputRef?: React.Ref<HTMLInputElement>;
   mask?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 export default function FormInput({
@@ -34,7 +33,6 @@ export default function FormInput({
   onKeyDown,
   onBlur,
   inputRef,
-  onChange,
 }: FormInputProps) {
   const {
     control,
@@ -62,10 +60,6 @@ export default function FormInput({
           render={({ field }) => (
             <Input
               {...field}
-              onChange={(e) => {
-              field.onChange(e);
-              onChange?.(e);
-              }}
               id={name}
               type={type}
               placeholder={placeholder}

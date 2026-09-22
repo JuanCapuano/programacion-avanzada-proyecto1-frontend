@@ -52,6 +52,20 @@ export default function LineasSelector({
       </label>
 
       <div className="flex gap-x-4">
+        {/* Denominación */}
+        <div className="w-80">
+          <input
+            ref={denominacionLineaRef}
+            type="text"
+            placeholder="Denominación"
+            value={denominacionLinea}
+            onChange={(e) => setDenominacionLinea(e.target.value.trimStart())}
+            onKeyDown={onEnterLinea}
+            disabled={disabled}
+            className="w-full border border-gray-300 bg-white text-black rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
         {/* Selects */}
         <div className="flex flex-col w-full gap-2">
           <div ref={selectLineaRef}>

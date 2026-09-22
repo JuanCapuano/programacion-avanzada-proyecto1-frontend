@@ -1,20 +1,19 @@
-import { DollarSign, Package, PlusCircle, Search } from "lucide-react";
+import { Package, PlusCircle, Search } from "lucide-react";
 import { Button } from "../../../ui/Button";
 import { CardHeader, CardTitle } from "../../../ui/Card";
 import { Input } from "../../../ui/Input";
 import { EstadisticasSimples } from "../../../herramientas/reutilizables/estadisticas-simples";
 import { ImpresionForm } from "../../../herramientas/reutilizables/impresion-form";
-import { puedeAgregarProducto, puedeActualizarPreciosMasivo } from "../domain/permisos-producto";
+import { puedeAgregarProducto } from "../domain/permisos-producto";
 
 interface Props {
   codigo: string;
   exacto: boolean;
-  roles: number[];
+  roles:number[];
   onChangeCodigo: (value: string) => void;
   onChangeExacto: (value: boolean) => void;
   onBuscarRapido: () => void;
   onNuevo: () => void;
-  onAjusteMasivo: () => void;
   total: number;
   mostrados: number;
   paginaActual: number;
@@ -30,7 +29,6 @@ export function ProductosHeaderLg({
   onChangeExacto,
   onBuscarRapido,
   onNuevo,
-  onAjusteMasivo,
   total,
   mostrados,
   paginaActual,
@@ -59,33 +57,22 @@ export function ProductosHeaderLg({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2">
+
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={exacto} onChange={(e) => onChangeExacto(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={exacto}
+              onChange={(e) => onChangeExacto(e.target.checked)}
+            />
             Exacto
           </label>
         </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {puedeActualizarPreciosMasivo(roles) && (
-          <Button
-            title="Actualizar precios masivo"
-            className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1.5 px-3 py-2 rounded-lg shadow-sm"
-            onClick={onAjusteMasivo}
-          >
-            <DollarSign className="h-4 w-4" />
-          </Button>
-        )}
-        {puedeAgregarProducto(roles) && (
-          <Button
-            className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1.5 px-3 py-2 rounded-lg shadow-sm"
-            onClick={onNuevo}
-          >
-            <PlusCircle className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
 
+      </div>
+      {puedeAgregarProducto(roles) && (<Button className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1.5 px-3 py-2 rounded-lg shadow-sm"
+        onClick={onNuevo}><PlusCircle className="h-4 w-4" /></Button>)}
+      
       {/* Botón de agregar e impresion por el momento no lo mostramos en el celu */}
       {/* <div className="flex items-center justify-between gap-3">
         <Button
@@ -105,6 +92,7 @@ export function ProductosHeaderLg({
           />
         </div>
       </div> */}
+
     </CardHeader>
   );
 }

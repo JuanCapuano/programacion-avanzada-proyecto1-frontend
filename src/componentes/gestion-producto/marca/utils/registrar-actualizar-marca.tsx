@@ -69,9 +69,9 @@ export default function RegistrarActualizarMarcaForm({
           <form onSubmit={handleSubmit(onSubmit)}>
             <CardContent className="space-y-3 px-3 py-2">
               <FormInput
-                name="denominacion" /* Aca aparece como denominacion, pero en el formulario como marca */
-                label="Marca"
-                placeholder="Ingresa la marca"
+                name="denominacion"
+                label="Denominación"
+                placeholder="Ingresa la denominación"
                 disabled={marca?.sistema ?? false}
               />
               <FormInput
