@@ -10,7 +10,7 @@ type ModalKey =
   | "alternativos"
   | "deQuienEs";
 
-export function useProductoModales() {
+export function useProductosModales() {
   const [abiertos, setAbiertos] = useState<Record<ModalKey, boolean>>({
     alta: false,
     actualizar: false,

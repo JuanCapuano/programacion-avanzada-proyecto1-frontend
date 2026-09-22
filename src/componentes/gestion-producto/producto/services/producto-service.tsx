@@ -32,10 +32,10 @@ const ProductoService = {
       const token = localStorage.getItem("Token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-      console.log(">> PATCH iniciado a:", `${apiUrl}/producto/${id}/precios`);
+      console.log(">> PATCH iniciado a:", `${apiUrl}/producto/${id}/precio`);
       console.log(">> Payload PATCH:", payload);
 
-      const result = await axios.patch(`${apiUrl}/producto/${id}/precios`, payload, { headers });
+      const result = await axios.patch(`${apiUrl}/producto/${id}/precio`, payload, { headers });
       console.log(">> PATCH terminado con éxito:", result);
       return result;
     } catch (error) {

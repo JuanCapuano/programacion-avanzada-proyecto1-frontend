@@ -290,10 +290,16 @@ export default function ConsultarProductos() {
   };
 
   const handleMostrarHistorialPrecios = async (id: number) => {
+    console.log("[FRONT · ConsultarProductos] handleMostrarHistorialPrecios — id:", id);
     if (id) {
       const producto = await ProductoService.obtenerId(id);
+      console.log("[FRONT · ConsultarProductos] producto cargado para historial:", producto);
+      console.log("[FRONT · ConsultarProductos] producto.id:", producto?.id, "tipo:", typeof producto?.id);
       setProductoInfo(producto);
       setMostrarHistorialPrecios(true);
+      console.log("[FRONT · ConsultarProductos] setMostrarHistorialPrecios(true) ejecutado");
+    } else {
+      console.warn("[FRONT · ConsultarProductos] ⚠️ id inválido:", id);
     }
   };
 

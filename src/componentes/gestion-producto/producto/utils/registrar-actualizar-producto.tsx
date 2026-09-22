@@ -52,6 +52,8 @@ export default function RegistrarActualizarProductoForm({
   const [lineaSeleccionada, setLineaSeleccionada] = useState<Linea>({} as Linea);
   const [denominacionPrevisualizada, setDenominacionPrevisualizada] = useState<string>(producto?.denominacion ?? "" );
   const [denominacionEditadaManualmente, setDenominacionEditadaManualmente] = useState(false);
+  const precioOriginal = useRef<number>(producto?.precio ?? 0);
+  const costoOriginal = useRef<number>(producto?.costo ?? 0);
 
   console.log("Configuración del sistema:", configuracion);
 
@@ -241,15 +243,40 @@ export default function RegistrarActualizarProductoForm({
         if (!confirmar) return; // el usuario canceló
       }
 
-      if (producto) {
-        const payload = {
-          ...formData,
-          usuarioUpdatedId: usuarioId,
-          denominacion: usuarioEditoManualmente.current ? denominacionManualRef.current : undefined,
-        };
+    if (producto) {
+      const { motivo, ...formDataSinMotivo } = formData; // ← separás motivo
+      // registrar historial si el precio cambió
+      const precioNuevo = formData.precio ?? 0;
+      if (precioNuevo !== precioOriginal.current) {
+        if (!motivo?.trim()) {
+          setError("motivo", {
+            type: "manual",
+            message: "El motivo es obligatorio cuando se modifica el precio.",
+          });
+          return;
+        }
+      const payload = {
+        ...formDataSinMotivo,
+        usuarioUpdatedId: usuarioId,
+        denominacion: usuarioEditoManualmente.current ? denominacionManualRef.current : undefined,
+      };
 
-        response = await ProductoService.actualizar(producto.id, payload);
-      } else {
+      response = await ProductoService.actualizar(producto.id, payload);
+
+
+        await ProductoService.actualizarPreciosProducto(producto.id, {
+          precio: precioNuevo,
+          precioAnterior: precioOriginal.current,
+          costo: formData.costo ?? 0,
+          costoDolar: 0,
+          cotizacionDolar: 0,
+          porcentaje: formData.porcentaje ?? 0,
+          motivo,
+          usuarioId: usuarioId,
+        });
+      }
+    }
+       else {
         const payload = {
           ...formData,
           usuarioCreatedId: usuarioId,
@@ -438,6 +465,13 @@ export default function RegistrarActualizarProductoForm({
                     placeholder="Ingresa el Codigo Interno"
                     disabled={producto && producto.sistema > 0 ? true : false}
                   />
+                  {producto && (
+                  <FormInput
+                    name="motivo"
+                    label="Motivo del cambio de precio (si modificaste el precio)"
+                    placeholder="Ej: Aumento de costos del proveedor"
+                  />
+                )}
 
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700">Alicuota IVA</label>
