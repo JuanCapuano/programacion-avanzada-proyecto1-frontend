@@ -50,7 +50,7 @@ export default function RegistrarActualizarProductoForm({
   const [pack, setPack] = useState(false);
   const [usaOferta, setUsaOferta] = useState(false);
   const [lineaSeleccionada, setLineaSeleccionada] = useState<Linea>({} as Linea);
-  const [denominacionPrevisualizada, setDenominacionPrevisualizada] = useState<string>("");
+  const [denominacionPrevisualizada, setDenominacionPrevisualizada] = useState<string>(producto?.denominacion ?? "" );
   const [denominacionEditadaManualmente, setDenominacionEditadaManualmente] = useState(false);
 
   console.log("Configuración del sistema:", configuracion);
@@ -106,15 +106,17 @@ export default function RegistrarActualizarProductoForm({
   const denominacionProductoRef = useRef<HTMLInputElement>(null);
   useEnterFocus(denominacionProductoRef);
   const observacionRef = useRef<HTMLInputElement>(null);
-  const ubicacionRef = useRef<HTMLInputElement>(null);
+  //const ubicacionRef = useRef<HTMLInputElement>(null);
   const selectTipoProductoRef = useRef<HTMLDivElement>(null);
-  const codigoBarraRef = useRef<HTMLInputElement>(null);
+  //const codigoBarraRef = useRef<HTMLInputElement>(null);
   const selectAlicuotaIvaRef = useRef<HTMLDivElement>(null);
   const precioOfertaRef = useRef<HTMLInputElement>(null);
   const denominacionLineaRef = useRef<HTMLInputElement>(null);
   const selectLineaRef = useRef<HTMLDivElement>(null);
   const denominacionMarcaRef = useRef<HTMLInputElement>(null);
   const selectMarcaRef = useRef<HTMLDivElement>(null);
+  const usuarioEditoManualmente = useRef(false);
+  const denominacionManualRef = useRef<string>("");
 
   const enterToObservacion = useEnterFocus(observacionRef);
   const enterToPrecioOferta = useEnterFocus(precioOfertaRef);
@@ -142,6 +144,15 @@ export default function RegistrarActualizarProductoForm({
     setStockCritico(utilizaStockMinimo || false);
     setUsaOferta(false);
   }, [utilizaPack, utilizaStockMinimo, false]);
+
+  useEffect(() => {
+    if (!denominacionPrevisualizada) return;
+    if (denominacion !== denominacionPrevisualizada) {
+      setDenominacionEditadaManualmente(true);
+    } else {
+      setDenominacionEditadaManualmente(false);
+    }
+  }, [denominacion]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -198,7 +209,7 @@ export default function RegistrarActualizarProductoForm({
         );
         setDenominacionPrevisualizada(result.denominacion);
       // Si es alta, seteamos la denominacion en el form directamente
-        if (!producto) {
+        if (!producto && !denominacionEditadaManualmente) {
           setValue("denominacion", result.denominacion);
         }
       } catch {
@@ -210,6 +221,8 @@ export default function RegistrarActualizarProductoForm({
   }, [marcaId, lineaId, presentacionCantidad, presentacionUnidad]);
 
   const onSubmit = async (formData: FormValues) => {
+    console.log("denominacionEditadaManualmente:", denominacionEditadaManualmente);
+    console.log("formData.denominacion:", formData.denominacion);
     let response: ResponsePost;
 
     try {
@@ -232,6 +245,7 @@ export default function RegistrarActualizarProductoForm({
         const payload = {
           ...formData,
           usuarioUpdatedId: usuarioId,
+          denominacion: usuarioEditoManualmente.current ? denominacionManualRef.current : undefined,
         };
 
         response = await ProductoService.actualizar(producto.id, payload);
@@ -239,8 +253,10 @@ export default function RegistrarActualizarProductoForm({
         const payload = {
           ...formData,
           usuarioCreatedId: usuarioId,
+          denominacion: usuarioEditoManualmente.current ? denominacionManualRef.current : undefined,
         };
 
+        
         response = await ProductoService.nuevo(payload);
       }
 
@@ -384,6 +400,10 @@ export default function RegistrarActualizarProductoForm({
                           disabled={producto && producto.sistema > 0 ? true : false}
                           onKeyDown={enterToObservacion}
                           inputRef={denominacionProductoRef}
+                          onChange={(e) => { 
+                          usuarioEditoManualmente.current = true;
+                          denominacionManualRef.current = e.target.value;
+                          }}
                         />
                       </div>
                       {producto && producto.origenDenominacion === 'MANUAL' && (
@@ -417,28 +437,6 @@ export default function RegistrarActualizarProductoForm({
                     label="Codigo Interno"
                     placeholder="Ingresa el Codigo Interno"
                     disabled={producto && producto.sistema > 0 ? true : false}
-                  />
-
-                  <FormInput
-                    name="codigoReferencia"
-                    label="Codigo Referencia"
-                    placeholder="Ingresa el codigo de referencia"
-                  />
-
-                  <FormInput
-                    name="codigoBarra"
-                    label="Código De Barra"
-                    placeholder="Ingresa el código de barra (opcional)"
-                    inputRef={codigoBarraRef}
-                    onKeyDown={(e) => handleEnterEnSelect(e, "ALICUOTA-IVA")}
-                  />
-
-                  <FormInput
-                    name="ubicacion"
-                    label="Ubicación"
-                    placeholder="Ingresa una ubicación (opcional)"
-                    onKeyDown={(e) => handleEnterEnSelect(e, "TIPO-PRODUCTO")}
-                    inputRef={ubicacionRef}
                   />
 
                   <div>
@@ -491,11 +489,54 @@ export default function RegistrarActualizarProductoForm({
                 </div>
               </section>
 
+              {/* ===== Clasificación ===== */}
+              <section className="border border-gray-200 rounded-lg p-4">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Clasificación</h3>
+
+                  <div className="flex flex-col gap-3">
+                    <LineasSelector
+                      denominacionLinea={denominacionLinea}
+                      setDenominacionLinea={setDenominacionLinea}
+                      denominacionLineaRef={denominacionLineaRef}
+                      selectLineaRef={selectLineaRef}
+                      lineas={lineas}
+                      selectedLinea={selectedLinea}
+                      lineaId={watch("lineaId")}
+                      disabled={producto && producto.sistema > 0}
+                      errors={errors}
+                      onEnterLinea={(e) => handleEnterEnSelect(e, "LINEA")}
+                      onEnterDenominacion={enterToDenominacionMarca}
+                      onLineaChange={(linea) => {
+                        methods.setValue("lineaId", linea?.id || 0);
+                        setLineaSeleccionada(linea as any);
+                      }}
+                      onAgregarLinea={() => setMostrarFormularioLinea(true)}
+                    />
+
+                  <MarcasSelector
+                    denominacionMarca={denominacionMarca}
+                    setDenominacionMarca={setDenominacionMarca}
+                    denominacionMarcaRef={denominacionMarcaRef}
+                    selectMarcaRef={selectMarcaRef}
+                    marcas={marcas}
+                    selectedMarca={selectedMarca}
+                    marcaId={watch("marcaId")}
+                    disabled={producto && producto.sistema > 0}
+                    error={errors.marcaId?.message}
+                    onEnterMarca={(e) => handleEnterEnSelect(e, "MARCA")}
+                    onChangeMarca={(marca) => {
+                      methods.setValue("marcaId", marca?.id || 0);
+                    }}
+                    onAgregarMarca={() => setMostrarFormularioMarca(true)}
+                  />
+                </div>
+              </section>
+
               {/* ===== Costo y Porcentaje ===== */}
               <section className="border border-gray-200 rounded-lg p-4">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Costo y Porcentaje</h3>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
                   <PriceInput
                     name="costo"
                     label="Costo"
@@ -518,7 +559,7 @@ export default function RegistrarActualizarProductoForm({
               <section className="border border-gray-200 rounded-lg p-4">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Presentación</h3>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
                   <div className="space-y-1 sm:space-y-2">
                     <Label htmlFor="presentacionCantidad" className="label-base">
                       Cantidad
@@ -578,49 +619,6 @@ export default function RegistrarActualizarProductoForm({
                       <small className="text-red-500">{errors.presentacionUnidad?.message as string}</small>
                     )}
                   </div>
-                </div>
-              </section>
-
-              {/* ===== Clasificación ===== */}
-              <section className="border border-gray-200 rounded-lg p-4">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Clasificación</h3>
-
-                <div className="flex flex-col gap-3">
-                  <LineasSelector
-                    denominacionLinea={denominacionLinea}
-                    setDenominacionLinea={setDenominacionLinea}
-                    denominacionLineaRef={denominacionLineaRef}
-                    selectLineaRef={selectLineaRef}
-                    lineas={lineas}
-                    selectedLinea={selectedLinea}
-                    lineaId={watch("lineaId")}
-                    disabled={producto && producto.sistema > 0}
-                    errors={errors}
-                    onEnterLinea={(e) => handleEnterEnSelect(e, "LINEA")}
-                    onEnterDenominacion={enterToDenominacionMarca}
-                    onLineaChange={(linea) => {
-                      methods.setValue("lineaId", linea?.id || 0);
-                      setLineaSeleccionada(linea as any);
-                    }}
-                    onAgregarLinea={() => setMostrarFormularioLinea(true)}
-                  />
-
-                  <MarcasSelector
-                    denominacionMarca={denominacionMarca}
-                    setDenominacionMarca={setDenominacionMarca}
-                    denominacionMarcaRef={denominacionMarcaRef}
-                    selectMarcaRef={selectMarcaRef}
-                    marcas={marcas}
-                    selectedMarca={selectedMarca}
-                    marcaId={watch("marcaId")}
-                    disabled={producto && producto.sistema > 0}
-                    error={errors.marcaId?.message}
-                    onEnterMarca={(e) => handleEnterEnSelect(e, "MARCA")}
-                    onChangeMarca={(marca) => {
-                      methods.setValue("marcaId", marca?.id || 0);
-                    }}
-                    onAgregarMarca={() => setMostrarFormularioMarca(true)}
-                  />
                 </div>
               </section>
 
