@@ -45,6 +45,7 @@ export default function ConsultarProductos() {
   const [mostrarMovimientosStock, setMostrarMovimientosStock] = useState(false);
   const [mostrarHistorialPrecios, setMostrarHistorialPrecios] = useState(false);
   const [mostrarCambioPrecios, setMostrarCambioPrecios] = useState(false);
+  const [mostrarAjusteMasivo, setMostrarAjusteMasivo] = useState(false);
   const [mostrarProductosAlternativos, setMostrarProductosAlternativos] = useState(false);
   const [mostrarDeQuienEsAlternativo, setMostrarDeQuienEsAlternativo] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -316,6 +317,19 @@ export default function ConsultarProductos() {
     setProductoInfo({} as Producto);
   };
 
+  const handleAbrirAjusteMasivo = () => {
+    setMostrarAjusteMasivo(true);
+  };
+
+  const handleCerrarAjusteMasivo = () => {
+    setMostrarAjusteMasivo(false);
+  };
+
+  const handleAjusteMasivoSuccess = async () => {
+    handleCerrarAjusteMasivo();
+    await handleBuscarProductos();
+  };
+
   const handleCerrarProductosAlternativos = () => {
     setMostrarProductosAlternativos(false);
     setProductoInfo({} as Producto);
@@ -534,6 +548,7 @@ export default function ConsultarProductos() {
                 onChangeExacto={setExacto}
                 onBuscarRapido={() => handleBuscarProductosRapido(true)}
                 onNuevo={openModal}
+                onAjusteMasivo={handleAbrirAjusteMasivo}
                 total={entidadesTotales}
                 mostrados={productos.length}
                 paginaActual={paginaActual}
@@ -551,6 +566,7 @@ export default function ConsultarProductos() {
                 onChangeExacto={setExacto}
                 onBuscarRapido={() => handleBuscarProductosRapido(true)}
                 onNuevo={openModal}
+                onAjusteMasivo={handleAbrirAjusteMasivo}
                 total={entidadesTotales}
                 mostrados={productos.length}
                 paginaActual={paginaActual}
@@ -620,6 +636,7 @@ export default function ConsultarProductos() {
         mostrarCambioPrecios={mostrarCambioPrecios}
         mostrarProductosAlternativos={mostrarProductosAlternativos}
         mostrarDeQuienEsAlternativo={mostrarDeQuienEsAlternativo}
+        mostrarAjusteMasivo={mostrarAjusteMasivo}
 
         productoSeleccionado={productoSeleccionado}
         productoInfo={productoInfo}
@@ -633,9 +650,11 @@ export default function ConsultarProductos() {
         onCloseCambioPrecios={handleCerrarCambioPrecios}
         onCloseProductosAlternativos={handleCerrarProductosAlternativos}
         onCloseDeQuienEsAlternativo={handleCerrarDeQuienEsAlternativo}
+        onCloseAjusteMasivo={handleCerrarAjusteMasivo}
 
         onSuccessAlta={handleSuccess}
         onSuccessActualizar={handleActualizarSuccess}
+        onSuccessAjusteMasivo={handleAjusteMasivoSuccess}
         onRefetch={handleBuscarProductos}
       />
 
