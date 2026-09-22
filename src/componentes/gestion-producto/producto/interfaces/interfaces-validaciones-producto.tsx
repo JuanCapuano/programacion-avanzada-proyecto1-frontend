@@ -31,7 +31,7 @@ export interface FormValues {
   lineaId: number;
   marcaId: number;
   /* subLineaId?: number | null */
-  alicuotaIva: number | null;
+  alicuotaIva?: number | null;
   /* ubicacion?: string | null;
   presentacionId: number; */
   stockMinimo?: number;
@@ -106,11 +106,12 @@ export const schema = (utilizaStockMinimo: boolean, utilizaPack: boolean, usaOfe
       .required("La línea es obligatoria.")
       .transform((value, originalValue) => (originalValue === "" ? null : value)) // Si el valor es una cadena vacía, lo convierte en null.
       .required("La linea es obligatoria."),
+
     alicuotaIva: yup
       .number()
-      .oneOf(Object.values(AlicuotaIva), "Alicuota IVA inválida")
-      .required("La alícuota IVA es obligatoria.")
-      .nullable(),
+      .optional()
+      .nullable()
+      .default(21),
     /* ubicacion: yup.string().optional().max(255, "Máximo 255 caracteres.").nullable(),
     presentacionId: yup
       .number()
