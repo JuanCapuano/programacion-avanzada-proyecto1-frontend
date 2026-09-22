@@ -17,6 +17,8 @@ export interface Producto {
   costo?: number | null;
   precio?: number | null;
   porcentaje?: number | null;
+  presentacionCantidad?: number | null;
+  presentacionUnidad?: string | null;
   //fechaCosto?: string | null;
  /*  costoEnDolar: boolean;
   costoDolar?: number | null;
@@ -63,6 +65,8 @@ export interface Producto {
   precioMayorista: number;
   precioCliente: number;
   precioOferta: number; */
+
+  origenDenominacion?: 'AUTOMATICA' | 'MANUAL' | null;
 }
 
 export interface ConsultarProducto {
@@ -84,6 +88,9 @@ export interface ConsultarProducto {
   precioMayoristaConIva: number;
   precioClienteConIva: number;
   precioOfertaConIva: number;
+  origenDenominacion?: 'AUTOMATICA' | 'MANUAL' | null;
+  presentacionCantidad?: number | null;
+  presentacionUnidad?: string | null;
 }
 
 
