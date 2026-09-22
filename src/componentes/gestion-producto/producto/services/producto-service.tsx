@@ -125,6 +125,27 @@ const ProductoService = {
     );
     return data;
   },
+
+  previsualizarDenominacion: async (marcaId: number, lineaId: number, presentacionCantidad?: number, presentacionUnidad?: string) => {
+    const token = localStorage.getItem("Token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const params: any = {marcaId, lineaId};
+    if (presentacionCantidad !== undefined) params.presentacionCantidad = presentacionCantidad;
+    if (presentacionUnidad) params.presentacionUnidad = presentacionUnidad;
+
+    const { data } = await axios.get(`${apiUrl}/producto/denominacion/previsualizar`, { headers, params });
+    return data as { denominacion: string };
+  },
+
+  restaurarDenominacion: async (id: number, usuarioId: number) => {
+    const token = localStorage.getItem("Token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const { data } = await axios.patch(`${apiUrl}/producto/${id}/restaurar-denominacion?usuarioId=${usuarioId}`, {}, { headers });
+    return data;
+    },
+
 };
+
 
 export default ProductoService;
