@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
-import { History, X, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import {
+  History,
+  X,
+  ArrowUpRight,
+  ArrowDownRight,
+  UserCircle,
+  CalendarClock,
+  MessageSquareText,
+  // TrendingUp, TrendingDown, Minus, // SIN USO: ver renderTendencia comentado
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/Card";
 import { Button } from "../../../ui/Button";
 import Paginacion from "../../../herramientas/reutilizables/paginacion";
@@ -64,13 +73,107 @@ export default function HistorialPrecioProductoComponent({ producto, onClose }: 
     setPaginaActual(nuevaPagina);
   };
 
-  /** Devuelve ícono y color según si el precio subió, bajó o quedó igual */
-  const renderTendencia = (anterior: number, nuevo: number) => {
-    if (nuevo > anterior)
-      return <TrendingUp size={16} className="text-red-500 shrink-0" title="Precio aumentó" />;
-    if (nuevo < anterior)
-      return <TrendingDown size={16} className="text-green-500 shrink-0" title="Precio bajó" />;
-    return <Minus size={16} className="text-gray-400 shrink-0" />;
+  // DEPRECADO: la tendencia en rojo/verde se reemplazó por la columna
+  // "Variación" en color neutro. Se comenta (no se borra) para referencia.
+  //
+  // /** Devuelve ícono y color según si el precio subió, bajó o quedó igual */
+  // const renderTendencia = (anterior: number, nuevo: number) => {
+  //   if (nuevo > anterior)
+  //     return <TrendingUp size={16} className="text-red-500 shrink-0" title="Precio aumentó" />;
+  //   if (nuevo < anterior)
+  //     return <TrendingDown size={16} className="text-green-500 shrink-0" title="Precio bajó" />;
+  //   return <Minus size={16} className="text-gray-400 shrink-0" />;
+  // };
+
+  /** Compara a 2 decimales (lo que se muestra) para no marcar cambios invisibles. */
+  const cambio = (anterior: number, nuevo: number) =>
+    Math.round(Number(anterior) * 100) !== Math.round(Number(nuevo) * 100);
+
+  const formatNumero = (valor: number) =>
+    valor.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  /** Variación en color neutro: flecha + signo + diferencia (y % para montos). */
+  const renderVariacion = (anterior: number, nuevo: number, tipo: "monto" | "porcentaje") => {
+    const a = Number(anterior);
+    const n = Number(nuevo);
+    if (!cambio(a, n)) {
+      return <span className="text-xs text-gray-400 dark:text-gray-500">Sin cambios</span>;
+    }
+    const diferencia = n - a;
+    const signo = diferencia > 0 ? "+" : "−";
+    const Flecha = diferencia > 0 ? ArrowUpRight : ArrowDownRight;
+    const texto =
+      tipo === "monto"
+        ? `${signo}${formatPrice(Math.abs(diferencia), "ARS")}`
+        : `${signo}${formatNumero(Math.abs(diferencia))} pts`;
+    const relativo =
+      tipo === "monto" && a > 0 ? ` (${signo}${formatNumero(Math.abs((diferencia / a) * 100))} %)` : "";
+
+    return (
+      <span className="inline-flex items-center gap-1 text-gray-800 dark:text-gray-100 font-medium">
+        <Flecha size={14} className="text-slate-500 dark:text-slate-400 shrink-0" />
+        {texto}
+        <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">{relativo}</span>
+      </span>
+    );
+  };
+
+  /** Arma la frase "modificó el costo y el margen" según lo que cambió. */
+  const describirCambios = (r: HistorialPrecioProducto) => {
+    const campos: string[] = [];
+    if (cambio(r.costoAnterior, r.costoNuevo)) campos.push("el costo");
+    if (cambio(r.porcentajeAnterior, r.porcentajeNuevo)) campos.push("el margen");
+    if (cambio(r.costoDolarAnterior, r.costoDolarNuevo)) campos.push("el costo USD");
+    if (campos.length === 0) return "modificó el precio";
+    if (campos.length === 1) return `modificó ${campos[0]}`;
+    return `modificó ${campos.slice(0, -1).join(", ")} y ${campos[campos.length - 1]}`;
+  };
+
+  const renderFila = (
+    etiqueta: string,
+    anterior: number,
+    nuevo: number,
+    tipo: "monto" | "porcentaje",
+    opciones: { esResultado?: boolean; moneda?: "ARS" | "USD" } = {},
+  ) => {
+    const modificado = cambio(anterior, nuevo);
+    const formatear = (v: number) =>
+      tipo === "monto" ? formatPrice(v, opciones.moneda ?? "ARS") : formatPercentage(v);
+
+    return (
+      <tr
+        className={`border-t border-gray-100 dark:border-slate-700 ${
+          modificado ? "bg-blue-50/60 dark:bg-blue-900/15" : ""
+        }`}
+      >
+        <td className="py-2 pl-3 pr-2">
+          <div className="flex items-center gap-2">
+            {modificado && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />}
+            <span
+              className={`${modificado ? "font-medium text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"} ${
+                opciones.esResultado ? "font-semibold" : ""
+              }`}
+            >
+              {etiqueta}
+            </span>
+            {opciones.esResultado && (
+              <span className="text-[10px] uppercase tracking-wide text-gray-400">resultado</span>
+            )}
+          </div>
+        </td>
+        <td className="py-2 px-2 text-right tabular-nums text-gray-500 dark:text-gray-400">
+          {formatear(anterior)}
+        </td>
+        <td
+          className={`py-2 px-2 text-right tabular-nums ${
+            modificado ? "font-semibold text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"
+          }`}
+        >
+          {formatear(nuevo)}
+        </td>
+        <td className="py-2 pl-2 pr-3 text-right tabular-nums">{renderVariacion(anterior, nuevo, tipo)}</td>
+      </tr>
+    );
   };
 
   const formatFecha = (fechaStr: string) => {
@@ -135,23 +238,55 @@ export default function HistorialPrecioProductoComponent({ producto, onClose }: 
                   className="border border-gray-200 dark:border-slate-700 hover:shadow-sm transition-shadow"
                 >
                   <CardContent className="p-4">
-                    {/* ── Cabecera del registro ── */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        {renderTendencia(r.precioAnterior, r.precioNuevo)}
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                          {formatFecha(r.fecha)}
-                        </span>
-                        <span className="text-xs bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
-                          {r.usuario}
-                        </span>
+                    {/* ── Quién y qué cambió ── */}
+                    <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <UserCircle size={18} className="text-slate-500 dark:text-slate-400 shrink-0" />
+                        <p className="text-sm text-gray-700 dark:text-gray-200">
+                          <span className="font-semibold text-gray-900 dark:text-white">
+                            {r.usuario || "Usuario desconocido"}
+                          </span>{" "}
+                          {describirCambios(r)}
+                        </p>
                       </div>
-                      <span className="text-xs text-gray-400 italic max-w-[280px] text-right truncate" title={r.motivo}>
-                        "{r.motivo}"
+                      <span className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 shrink-0">
+                        <CalendarClock size={14} />
+                        {formatFecha(r.fecha)}
                       </span>
                     </div>
 
-                    {/* ── Grilla de valores ── */}
+                    {/* ── Motivo ── */}
+                    <div className="flex items-start gap-2 mb-3 text-sm">
+                      <MessageSquareText size={16} className="text-slate-400 mt-0.5 shrink-0" />
+                      <p className="text-gray-600 dark:text-gray-300 break-words">
+                        <span className="font-medium text-gray-700 dark:text-gray-200">Motivo:</span> {r.motivo}
+                      </p>
+                    </div>
+
+                    {/* ── Anterior → Nuevo ── */}
+                    <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-700">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50 dark:bg-slate-700/40 text-xs text-gray-500 dark:text-gray-400">
+                          <tr>
+                            <th className="py-2 pl-3 pr-2 text-left font-medium">Campo</th>
+                            <th className="py-2 px-2 text-right font-medium">Anterior</th>
+                            <th className="py-2 px-2 text-right font-medium">Nuevo</th>
+                            <th className="py-2 pl-2 pr-3 text-right font-medium">Variación</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {renderFila("Costo", r.costoAnterior, r.costoNuevo, "monto")}
+                          {renderFila("Margen", r.porcentajeAnterior, r.porcentajeNuevo, "porcentaje")}
+                          {(r.costoDolarNuevo > 0 || r.costoDolarAnterior > 0) &&
+                            renderFila("Costo USD", r.costoDolarAnterior, r.costoDolarNuevo, "monto", { moneda: "USD" })}
+                          {renderFila("Precio de venta", r.precioAnterior, r.precioNuevo, "monto", { esResultado: true })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* DEPRECADO: grilla de tarjetas con precio en rojo/verde, reemplazada
+                        por la tabla de arriba. Se desactiva (no se borra) para referencia. */}
+                    {false && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
 
                       {/* Precio */}
@@ -203,6 +338,7 @@ export default function HistorialPrecioProductoComponent({ producto, onClose }: 
                       )}
 
                     </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
