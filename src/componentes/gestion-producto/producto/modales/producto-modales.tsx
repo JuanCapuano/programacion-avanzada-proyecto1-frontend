@@ -28,7 +28,7 @@ interface Props {
   onCloseAjusteMasivo: () => void;
   onSuccessAlta: (mensaje: string, producto?: Producto) => void;
   onSuccessActualizar: (mensaje: string) => void;
-  onSuccessAjusteMasivo: () => void;
+  onSuccessAjusteMasivo: (mensaje: string) => void;
   onRefetch: () => void;
 }
 

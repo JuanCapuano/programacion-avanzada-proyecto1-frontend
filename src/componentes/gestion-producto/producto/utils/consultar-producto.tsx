@@ -331,8 +331,17 @@ export default function ConsultarProductos() {
     setMostrarAjusteMasivo(false);
   };
 
-  const handleAjusteMasivoSuccess = async () => {
+  const handleAjusteMasivoSuccess = async (mensajeAlerta: string) => {
     handleCerrarAjusteMasivo();
+
+    addAlert({
+      type: TipoAlerta.SUCCESS,
+      title: TituloAlerta.SUCCESS,
+      message: mensajeAlerta,
+      autoClose: true,
+      duration: 3000,
+    });
+
     await handleBuscarProductos();
   };
 
