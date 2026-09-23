@@ -6,10 +6,9 @@ import { Button } from "../../../ui/Button";
 import FormInput from "../../../herramientas/formateo-de-campos/form-input";
 import React from "react";
 import { Card } from "../../../ui/Card";
-import { FormValues, schema, transformData, SublineasEnPayload, transformarSublineas } from "../interfaces/interfaces-validaciones-linea";
+import { FormValues, schema, transformData, SublineasEnPayload } from "../interfaces/interfaces-validaciones-linea";
 import LineaService from "../services/linea-service";
 import { Linea } from "../../../../interfaces/gestion-producto/linea/interfaces-linea";
-
 import { Layers, PlusCircle } from "lucide-react";
 import { parseApiError } from "../../../../utils/errores";
 import { ResponsePost } from "../../../../interfaces/generales/interfaces-generales";
@@ -21,6 +20,7 @@ import {
   TituloAlertaConfirmacion,
   useConfirmation,
 } from "../../../herramientas/alertas/alertas-confirmacion";
+import SuperLineaSelector from "../../producto/componentes/configuracion/super-linea-selector";
 
 export default function RegistrarActualizarLineaForm({
   linea,
@@ -70,7 +70,7 @@ export default function RegistrarActualizarLineaForm({
           setValue("observacion", linea.observacion || null);
           setValue("stockMinimo", linea.stockMinimo || 0);
           setValue("utilizaStockMinimo", linea.utilizaStockMinimo || false);
-          
+          setValue("superLineaId", linea.superlinea?.id ?? null);
         }
       } catch (error) {
         console.error("Error al obtener los datos:", error);
@@ -89,6 +89,7 @@ export default function RegistrarActualizarLineaForm({
         response = await LineaService.actualizar(linea.id, payload);
       } else {
         const payload = { ...formData, usuarioCreatedId: usuarioId };
+        console.log("Payload para crear línea:", payload);
         response = await LineaService.nuevo(payload);
       }
       onClose();
@@ -131,6 +132,14 @@ export default function RegistrarActualizarLineaForm({
               <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 px-6 py-4">
                 <div className="lg:col-span-2">
                   <FormInput name="denominacion" label="Linea" placeholder="Ingresa la linea" />
+                </div>
+
+                <div className="lg:col-span-2">
+                  <SuperLineaSelector
+                    value={watch("superLineaId")}
+                    onChange={(opt) => setValue("superLineaId", opt ? opt.id : null)}
+                    disabled={linea?.sistema === 1}
+                  />
                 </div>
 
                 <div className="lg:col-span-2">

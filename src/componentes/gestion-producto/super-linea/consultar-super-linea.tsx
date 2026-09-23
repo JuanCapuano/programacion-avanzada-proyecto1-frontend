@@ -1,39 +1,41 @@
 import { useEffect, useState } from "react";
 import { Info, Layers, Pencil, PlusCircle, Trash } from "lucide-react";
-import { Button } from "../../../ui/Button";
-import { Linea } from "../../../../interfaces/gestion-producto/linea/interfaces-linea";
-import Paginacion from "../../../herramientas/reutilizables/paginacion";
-import { TablaAGGrid, Column } from "../../../herramientas/tablas/tabla-flexible-ag-grid";
-import { useFiltrosContext } from "../../../../context/filtros-contesxt";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/Card";
+import { Button } from "./../../ui/Button";
+import { Superlinea } from "./../../../interfaces/gestion-producto/superlinea/interfaces-superlinea";
+import Paginacion from "./../../herramientas/reutilizables/paginacion";
+import { TablaAGGrid, Column } from "./../../herramientas/tablas/tabla-flexible-ag-grid";
+import { useFiltrosContext } from "./../../../context/filtros-contesxt";
+import { Card, CardContent, CardHeader, CardTitle } from "./../../ui/Card";
 import {
   TipoAlertaConfirmacion,
   TituloAlertaConfirmacion,
   useConfirmation,
-} from "../../../herramientas/alertas/alertas-confirmacion";
-import { Alertas, TipoAlerta, TituloAlerta, useAlerts } from "../../../herramientas/alertas/alertas";
-import { Auditoria, ResponsePost } from "../../../../interfaces/generales/interfaces-generales";
-import InformacionAuditoria from "../../../herramientas/reutilizables/informacion-auditoria";
+} from "./../../herramientas/alertas/alertas-confirmacion";
+import { Alertas, TipoAlerta, TituloAlerta, useAlerts } from "./../../herramientas/alertas/alertas";
+import { Auditoria, ResponsePost } from "./../../../interfaces/generales/interfaces-generales";
+import InformacionAuditoria from "./../../herramientas/reutilizables/informacion-auditoria";
 import {
   denominacionNotScrollColumnProps,
   observacionesColumnProps,
-} from "../../../herramientas/tablas/formateo-columnas-documentos";
-import { EstadisticasSimples } from "../../../herramientas/reutilizables/estadisticas-simples";
-import { ImpresionForm } from "../../../herramientas/reutilizables/impresion-form";
-import { getUsuarioId } from "../../../../utils/auth";
-import { FiltrosLinea, FiltrosLineaValues } from "../componentes/filtros-linea";
-import LineaService from "../services/linea-service";
-import RegistrarActualizarLineaForm from "./registrar-actualizar-linea";
+} from "./../../herramientas/tablas/formateo-columnas-documentos";
+import { EstadisticasSimples } from "./../../herramientas/reutilizables/estadisticas-simples";
+import { ImpresionForm } from "./../../herramientas/reutilizables/impresion-form";
+import { getUsuarioId } from "./../../../utils/auth";
+import { FiltrosSuperlinea, FiltrosSuperlineaValues } from "./componentes/filtros-superlinea";
+import SuperlineaService from "./services/superlinea-service";
+import RegistrarActualizarSuperlineaForm from "./utils/registrar-actualizar-superlinea";
 
-export default function ConsultarSuperlinea() {
-  const [lineas, setLineas] = useState<Linea[]>([]);
+const NOMBRE_COMPONENTE = "consultar-superlinea";
+
+export default function ConsultarSuperLinea() {
+  const [superlineas, setSuperlineas] = useState<Superlinea[]>([]);
   const [loading, setLoading] = useState(false);
   const [error] = useState<string | null>(null);
-  const [mostrarActualizarLinea, setMostrarActualizarLinea] = useState(false);
-  const [lineaSeleccionada, setLineaSeleccionada] = useState<Linea>({} as Linea);
+  const [mostrarActualizarSuperlinea, setMostrarActualizarSuperlinea] = useState(false);
+  const [superlineaSeleccionada, setSuperlineaSeleccionada] = useState<Superlinea>({} as Superlinea);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { alerts, addAlert, removeAlert } = useAlerts();
-  const { showConfirmation, AlertasConfirmacion: AlertasConfirmacion } = useConfirmation();
+  const { showConfirmation, AlertasConfirmacion } = useConfirmation();
 
   const [mostrarInfoAuditoria, setMostrarInfoAuditoria] = useState(false);
   const [auditoria, setAuditoria] = useState<Auditoria>({} as Auditoria);
@@ -51,12 +53,13 @@ export default function ConsultarSuperlinea() {
   const [filtrosInicializados, setFiltrosInicializados] = useState(false);
   const { setFiltrosNecesarios, limpiarFiltros, buscar, setBuscar } = useFiltrosContext();
 
-  // Filtros locales
-  const [filtrosLinea, setFiltrosLinea] = useState<FiltrosLineaValues>({ denominacion: "" });
+  const [filtrosSuperlinea, setFiltrosSuperlinea] = useState<FiltrosSuperlineaValues>({
+    denominacion: "",
+  });
 
   useEffect(() => {
     limpiarFiltros();
-    setBuscar({ cont: 0, componente: "consultar-linea" });
+    setBuscar({ cont: 0, componente: NOMBRE_COMPONENTE });
     setFiltrosNecesarios({
       denominacion: true,
     });
@@ -64,32 +67,32 @@ export default function ConsultarSuperlinea() {
   }, []);
 
   useEffect(() => {
-    console.log("el buscar es:", buscar);
-    if (buscar.cont > 0 && buscar.componente === "consultar-linea") {
-      handleBuscarLineas(true);
+    if (buscar.cont > 0 && buscar.componente === NOMBRE_COMPONENTE) {
+      handleBuscarSuperlineas(true);
     }
   }, [buscar]);
 
   // MANEJO DE FILTROS ========================================================
 
-  const handleAbrirActualizarLinea = async (id: number) => {
+  const handleAbrirActualizarSuperlinea = async (id: number) => {
     if (id) {
-      const linea = await LineaService.obtenerId(id);
-      setLineaSeleccionada(linea);
-      setMostrarActualizarLinea(true);
+      const superlinea = await SuperlineaService.obtenerId(id);
+      setSuperlineaSeleccionada(superlinea);
+      setMostrarActualizarSuperlinea(true);
     }
   };
 
-  const handleCerrarActualizarLinea = () => {
-    setMostrarActualizarLinea(false);
-    setLineaSeleccionada({} as Linea);
+  const handleCerrarActualizarSuperlinea = () => {
+    setMostrarActualizarSuperlinea(false);
+    setSuperlineaSeleccionada({} as Superlinea);
   };
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirmation({
       type: TipoAlertaConfirmacion.DESTRUCTIVE,
       title: TituloAlertaConfirmacion.DESTRUCTIVE,
-      message: "¿Estás seguro de que quieres eliminar este elemento? Esta acción no se puede deshacer.",
+      message:
+        "¿Estás seguro de que quieres eliminar este elemento? Esta acción no se puede deshacer.",
       confirmText: "Eliminar",
       cancelText: "Cancelar",
       onConfirm: () => {},
@@ -99,9 +102,9 @@ export default function ConsultarSuperlinea() {
 
     let response: ResponsePost;
     try {
-      response = await LineaService.eliminar(id, usuarioId);
+      response = await SuperlineaService.eliminar(id, usuarioId);
 
-      setLineas(lineas.filter((linea) => linea.id !== id));
+      setSuperlineas(superlineas.filter((sl) => sl.id !== id));
 
       addAlert({
         type: TipoAlerta.SUCCESS,
@@ -114,7 +117,8 @@ export default function ConsultarSuperlinea() {
       addAlert({
         type: TipoAlerta.ERROR,
         title: TituloAlerta.ERROR,
-        message: "No se puede eliminar este elemento porque está siendo utilizada por uno o más productos.",
+        message:
+          "No se puede eliminar este elemento porque está siendo utilizado por una o más líneas.",
         autoClose: true,
         duration: 3000,
       });
@@ -123,7 +127,7 @@ export default function ConsultarSuperlinea() {
 
   const handleMostrarInfo = async (id: number) => {
     if (id) {
-      const datosAuditoria = await LineaService.obtenerAuditoria(id);
+      const datosAuditoria = await SuperlineaService.obtenerAuditoria(id);
       setAuditoria(datosAuditoria);
       setMostrarInfoAuditoria(true);
     }
@@ -134,13 +138,8 @@ export default function ConsultarSuperlinea() {
     setAuditoria({} as Auditoria);
   };
 
-  const openModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
   const handleSuccess = async (mensajeAlerta: string) => {
     closeModal();
@@ -156,16 +155,16 @@ export default function ConsultarSuperlinea() {
     setLoading(true);
 
     const filtrosConPaginacion = {
-      denominacion: filtrosLinea.denominacion,
-      skip: skip,
-      take: take,
+      denominacion: filtrosSuperlinea.denominacion,
+      skip,
+      take,
     };
 
-    const lineas = await LineaService.obtener(filtrosConPaginacion);
-    setLoading(false);
-    setEntidadesTotales(lineas.total);
+    const result = await SuperlineaService.obtener(filtrosConPaginacion);
+    setEntidadesTotales(result.total);
     setPaginaActual(paginaActual);
-    setLineas(lineas.data);
+    setSuperlineas(result.data);
+    setLoading(false);
   };
 
   const handleActualizarSuccess = async (mensajeAlerta: string) => {
@@ -179,49 +178,46 @@ export default function ConsultarSuperlinea() {
       duration: 3000,
     });
 
-    setLoading(true);
-
-    await handleBuscarLineas();
+    await handleBuscarSuperlineas();
   };
 
-  const handleBuscarLineas = async (botonBuscar?: boolean) => {
+  const handleBuscarSuperlineas = async (botonBuscar?: boolean) => {
     if (botonBuscar) {
       resetearPaginacion();
     }
     setLoading(true);
 
     const filtrosConPaginacion = {
-      denominacion: filtrosLinea.denominacion,
-      skip: skip,
-      take: take,
+      denominacion: filtrosSuperlinea.denominacion,
+      skip,
+      take,
     };
 
-    const lineasFiltradas = await LineaService.obtener(filtrosConPaginacion);
-    setLineas(lineasFiltradas.data);
-    setEntidadesTotales(lineasFiltradas.total);
+    const result = await SuperlineaService.obtener(filtrosConPaginacion);
+    setSuperlineas(result.data);
+    setEntidadesTotales(result.total);
     setLoading(false);
   };
 
-  const handleBuscarDesdeFiltro = (filtros: FiltrosLineaValues) => {
-    setFiltrosLinea(filtros);
+  const handleBuscarDesdeFiltro = (filtros: FiltrosSuperlineaValues) => {
+    setFiltrosSuperlinea(filtros);
   };
 
   // MANEJO DE PAGINACION ===========================================
 
   useEffect(() => {
-    if (filtrosInicializados === true) {
-      handleBuscarLineas();
+    if (filtrosInicializados) {
+      handleBuscarSuperlineas();
     }
   }, [paginaActual, filtrosInicializados]);
 
   useEffect(() => {
     if (filtrosInicializados) {
-      handleBuscarLineas(true);
+      handleBuscarSuperlineas(true);
     }
-  }, [filtrosLinea]);
+  }, [filtrosSuperlinea]);
 
   const handlePageChange = (skip: number, take: number, paginaActual: number) => {
-    console.log("entra en handlePageChange con skip:", skip, "take:", take, "paginaActual:", paginaActual);
     setSkip(skip);
     setTake(take);
     setPaginaActual(paginaActual);
@@ -236,7 +232,7 @@ export default function ConsultarSuperlinea() {
 
   const handleImprimirTodo = async () => {
     try {
-      const pdfBlob = await LineaService.imprimirTodo();
+      const pdfBlob = await SuperlineaService.imprimirTodo();
       const fileURL = URL.createObjectURL(new Blob([pdfBlob], { type: "application/pdf" }));
       window.open(fileURL, "_blank");
     } catch (error) {
@@ -246,7 +242,7 @@ export default function ConsultarSuperlinea() {
 
   const handleImprimirPagina = async () => {
     try {
-      const pdfBlob = await LineaService.imprimirTodo();
+      const pdfBlob = await SuperlineaService.imprimirPagina();
       const fileURL = URL.createObjectURL(new Blob([pdfBlob], { type: "application/pdf" }));
       window.open(fileURL, "_blank");
     } catch (error) {
@@ -254,7 +250,7 @@ export default function ConsultarSuperlinea() {
     }
   };
 
-  const columns: Column<Linea>[] = [
+  const columns: Column<Superlinea>[] = [
     {
       header: "Denominación",
       accessor: "denominacion",
@@ -283,14 +279,17 @@ export default function ConsultarSuperlinea() {
                 <div className="flex items-center gap-6">
                   <CardTitle className="flex items-center space-x-2">
                     <Layers className="consultar-icon" />
-                    <span>Líneas</span>
-                    <EstadisticasSimples filtrados={entidadesTotales} mostrados={lineas.length} />
+                    <span>SuperLíneas</span>
+                    <EstadisticasSimples
+                      filtrados={entidadesTotales}
+                      mostrados={superlineas.length}
+                    />
                   </CardTitle>
                 </div>
                 {/* Contenedor de botones */}
                 <div className="flex items-center gap-2">
                   <ImpresionForm
-                    entityName="Líneas"
+                    entityName="SuperLíneas"
                     onImprimirTodo={handleImprimirTodo}
                     onImprimirPagina={handleImprimirPagina}
                     totalItems={entidadesTotales}
@@ -305,27 +304,29 @@ export default function ConsultarSuperlinea() {
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                <FiltrosLinea onBuscar={handleBuscarDesdeFiltro} mostrarIncluirEliminados />
+                <FiltrosSuperlinea onBuscar={handleBuscarDesdeFiltro} mostrarIncluirEliminados />
 
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-400 text-lg">Cargando lineas...</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-lg">
+                      Cargando superlíneas...
+                    </p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <TablaAGGrid
                       columns={columns}
-                      data={lineas}
+                      data={superlineas}
                       onUpdate={() => {}}
                       actions={(row) => (
                         <div className="flex justify-end space-x-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleAbrirActualizarLinea(row.id)}
+                            onClick={() => handleAbrirActualizarSuperlinea(row.id)}
                             className="bg-blue-500 text-white hover:bg-blue-800 w-8 h-8 flex items-center justify-center"
-                            title="Actualizar producto"
+                            title="Actualizar superlínea"
                           >
                             <Pencil size={18} />
                           </Button>
@@ -334,7 +335,7 @@ export default function ConsultarSuperlinea() {
                             size="sm"
                             onClick={() => handleMostrarInfo(row.id)}
                             className="bg-blue-500 text-white hover:bg-blue-800 w-8 h-8 flex items-center justify-center"
-                            title="Ver información del producto"
+                            title="Ver información de la superlínea"
                           >
                             <Info size={18} />
                           </Button>
@@ -342,7 +343,11 @@ export default function ConsultarSuperlinea() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleDelete(row.id)}
-                            className={`w-8 h-8 flex items-center justify-center ${row.sistema > 0 ? "bg-gray-400 text-gray-600 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-800"}`}
+                            className={`w-8 h-8 flex items-center justify-center ${
+                              row.sistema > 0
+                                ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                                : "bg-blue-500 text-white hover:bg-blue-800"
+                            }`}
                             disabled={row.sistema > 0}
                           >
                             <Trash size={18} />
@@ -374,23 +379,23 @@ export default function ConsultarSuperlinea() {
         <AlertasConfirmacion />
       </div>
 
-      {/* Modal para Agregar Linea */}
+      {/* Modal para Agregar SuperLínea */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
-              <RegistrarActualizarLineaForm onClose={closeModal} onSuccess={handleSuccess} />
+              <RegistrarActualizarSuperlineaForm onClose={closeModal} onSuccess={handleSuccess} />
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal para Mostrar Información */}
+      {/* Modal para Mostrar Información de Auditoría */}
       {mostrarInfoAuditoria && auditoria && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
-              <InformacionAuditoria auditoria={auditoria} onClose={handleCerrarInfo}></InformacionAuditoria>
+              <InformacionAuditoria auditoria={auditoria} onClose={handleCerrarInfo} />
               <div className="mt-6 pt-4 border-t">
                 <Button onClick={handleCerrarInfo} className="btn btn-dark">
                   Cerrar
@@ -401,12 +406,13 @@ export default function ConsultarSuperlinea() {
         </div>
       )}
 
-      {mostrarActualizarLinea && lineaSeleccionada !== null && (
+      {/* Modal para Actualizar SuperLínea */}
+      {mostrarActualizarSuperlinea && superlineaSeleccionada !== null && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="relative p-6 sm:p-8 rounded-lg shadow-lg w-4/5 sm:w-3/5 md:w-2/3 lg:w-1/2 xl:w-2/5 max-w-full">
-            <RegistrarActualizarLineaForm
-              linea={lineaSeleccionada}
-              onClose={handleCerrarActualizarLinea}
+            <RegistrarActualizarSuperlineaForm
+              superlinea={superlineaSeleccionada}
+              onClose={handleCerrarActualizarSuperlinea}
               onSuccess={handleActualizarSuccess}
             />
           </div>
