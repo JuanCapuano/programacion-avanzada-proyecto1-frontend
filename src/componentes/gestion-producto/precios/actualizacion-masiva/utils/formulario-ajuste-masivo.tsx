@@ -13,7 +13,7 @@ import { useAjusteMasivo } from "../hooks/use-ajuste-masivo";
 
 interface Props {
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (mensaje: string) => void;
 }
 
 const ALCANCE_OPTIONS = [
@@ -67,14 +67,7 @@ export default function FormularioAjusteMasivo({ onClose, onSuccess }: Props) {
   const onConfirmar = handleSubmit(async (formData) => {
     try {
       const response = await handleConfirmar(formData);
-      addAlert({
-        type: TipoAlerta.SUCCESS,
-        title: TituloAlerta.SUCCESS,
-        message: response.mensaje,
-        autoClose: true,
-        duration: 7000,
-      });
-      onSuccess?.();
+      onSuccess?.(response.mensaje);
     } catch (error) {
       addAlert({
         type: TipoAlerta.ERROR,
