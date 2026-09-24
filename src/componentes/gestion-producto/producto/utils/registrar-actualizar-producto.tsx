@@ -19,9 +19,6 @@ import { useConfiguracionSistema } from "../../../sistema/ConfiguracionSistemaCo
 import { parseApiError } from "../../../../utils/errores";
 import { Layers } from "lucide-react";
 import RegistrarActualizarMarcaForm from "../../marca/utils/registrar-actualizar-marca";
-import { ItemProveedor } from "../../../../interfaces/gestion-producto/producto/interfaces-item-proveedor";
-import { SelectSublinea } from "../../../../interfaces/gestion-producto/sublinea/interfaces-sublinea";
-import { ItemsProveedorEnPayload } from "../interfaces/interfaces-validaciones-item-proveedor";
 import { FormValues, schema, transformData, transformarItemsProdAlternativo, UNIDADES_MEDIDA, PORCENTAJE_DEFAULT } from "../interfaces/interfaces-validaciones-producto";
 import LineasSelector from "../componentes/configuracion/lineas-selector";
 import EncabezadoFormularios from "../../../ui/encabezadoFormularios";
@@ -29,6 +26,7 @@ import MarcasSelector from "../componentes/configuracion/marcas-selector";
 import { getUsuarioId } from "../../../../utils/auth";
 import RegistrarActualizarLineaForm from "../../linea/utils/registrar-actualizar-linea";
 import PorcentajeInput from "../../../herramientas/formateo-de-campos/porcentaje-input";
+import { ResponsePost } from "../../../../interfaces/generales/interfaces-generales";
 
 
 export default function RegistrarActualizarProductoForm({
@@ -109,9 +107,7 @@ export default function RegistrarActualizarProductoForm({
   const denominacionProductoRef = useRef<HTMLInputElement>(null);
   useEnterFocus(denominacionProductoRef);
   const observacionRef = useRef<HTMLInputElement>(null);
-  //const ubicacionRef = useRef<HTMLInputElement>(null);
   const selectTipoProductoRef = useRef<HTMLDivElement>(null);
-  //const codigoBarraRef = useRef<HTMLInputElement>(null);
   const precioOfertaRef = useRef<HTMLInputElement>(null);
   const denominacionLineaRef = useRef<HTMLInputElement>(null);
   const selectLineaRef = useRef<HTMLDivElement>(null);
@@ -218,7 +214,6 @@ export default function RegistrarActualizarProductoForm({
       // Si falla la previsualización, no hacemos nada
       }
     };
-
       previsualizar();
   }, [marcaId, lineaId, presentacionCantidad, presentacionUnidad]);
 
@@ -244,15 +239,11 @@ export default function RegistrarActualizarProductoForm({
       }
 
     if (producto) {
-      const { motivo, ...formDataSinMotivo } = formData; // ← separás motivo
-      // CR-007: el precio no se edita, se deriva de costo y porcentaje. Se
-      // calcula igual que el backend (Producto.calcularPrecio) para saber si
-      // cambió y, en ese caso, exigir el motivo.
+      const { motivo, ...formDataSinMotivo } = formData;   // CR-007: el precio no se edita, se deriva de costo y porcentaje. Se calcula igual que el backend (Producto.calcularPrecio) para saber si cambió y, en ese caso, exigir el motivo.
       const costoNuevo = formData.costo ?? 0;
       const porcentajeNuevo = formData.porcentaje ?? 0;
       const precioNuevo = costoNuevo + (costoNuevo * porcentajeNuevo) / 100;
-      // Se compara a 5 decimales, la misma escala con la que el backend guarda el precio.
-      const precioCambio = Math.round(precioNuevo * 1e5) !== Math.round(precioOriginal.current * 1e5);
+      const precioCambio = Math.round(precioNuevo * 1e5) !== Math.round(precioOriginal.current * 1e5); // Se compara a 5 decimales, la misma escala con la que el backend guarda el precio.
 
       if (precioCambio && !motivo?.trim()) {
         setError("motivo", {
@@ -262,8 +253,6 @@ export default function RegistrarActualizarProductoForm({
         return;
       }
 
-      // El backend registra el historial de precio en la misma operación
-      // (PUT /producto/:id) cuando el precio resultante cambia.
       const payload = {
         ...formDataSinMotivo,
         motivo: precioCambio ? motivo?.trim() : undefined,
@@ -295,7 +284,6 @@ export default function RegistrarActualizarProductoForm({
           denominacion: usuarioEditoManualmente.current ? denominacionManualRef.current : undefined,
         };
 
-        
         response = await ProductoService.nuevo(payload);
       }
 
@@ -354,7 +342,6 @@ export default function RegistrarActualizarProductoForm({
         handleBuscarPorDenominacion("MARCA");
       }
 
-      // Esperar un poco (opcional, si el botón hace una búsqueda antes)
       setTimeout(() => {
         let selectDiv: HTMLDivElement | null = null;
 
@@ -369,7 +356,6 @@ export default function RegistrarActualizarProductoForm({
         if (select === "TIPO-PRODUCTO") {
           selectDiv = selectTipoProductoRef.current;
         }
-
 
         if (selectDiv) {
           const input = selectDiv.querySelector("input");
