@@ -49,6 +49,7 @@ export default function ConsultarProductos() {
   const [mostrarMovimientosStock, setMostrarMovimientosStock] = useState(false);
   const [mostrarHistorialPrecios, setMostrarHistorialPrecios] = useState(false);
   const [mostrarCambioPrecios, setMostrarCambioPrecios] = useState(false);
+  const [mostrarAjusteMasivo, setMostrarAjusteMasivo] = useState(false);
   const [mostrarProductosAlternativos, setMostrarProductosAlternativos] = useState(false);
   const [mostrarDeQuienEsAlternativo, setMostrarDeQuienEsAlternativo] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -293,10 +294,16 @@ export default function ConsultarProductos() {
   };
 
   const handleMostrarHistorialPrecios = async (id: number) => {
+    console.log("[FRONT · ConsultarProductos] handleMostrarHistorialPrecios — id:", id);
     if (id) {
       const producto = await ProductoService.obtenerId(id);
+      console.log("[FRONT · ConsultarProductos] producto cargado para historial:", producto);
+      console.log("[FRONT · ConsultarProductos] producto.id:", producto?.id, "tipo:", typeof producto?.id);
       setProductoInfo(producto);
       setMostrarHistorialPrecios(true);
+      console.log("[FRONT · ConsultarProductos] setMostrarHistorialPrecios(true) ejecutado");
+    } else {
+      console.warn("[FRONT · ConsultarProductos] ⚠️ id inválido:", id);
     }
   };
 
@@ -318,6 +325,28 @@ export default function ConsultarProductos() {
   const handleCerrarCambioPrecios = () => {
     setMostrarCambioPrecios(false);
     setProductoInfo({} as Producto);
+  };
+
+  const handleAbrirAjusteMasivo = () => {
+    setMostrarAjusteMasivo(true);
+  };
+
+  const handleCerrarAjusteMasivo = () => {
+    setMostrarAjusteMasivo(false);
+  };
+
+  const handleAjusteMasivoSuccess = async (mensajeAlerta: string) => {
+    handleCerrarAjusteMasivo();
+
+    addAlert({
+      type: TipoAlerta.SUCCESS,
+      title: TituloAlerta.SUCCESS,
+      message: mensajeAlerta,
+      autoClose: true,
+      duration: 3000,
+    });
+
+    await cargarConsulta();
   };
 
   const handleCerrarProductosAlternativos = () => {
@@ -508,6 +537,7 @@ export default function ConsultarProductos() {
                 onChangeExacto={setExacto}
                 onBuscarRapido={() => handleBuscarProductosRapido(true)}
                 onNuevo={openModal}
+                onAjusteMasivo={handleAbrirAjusteMasivo}
                 total={entidadesTotales}
                 mostrados={productos.length}
                 paginaActual={paginaActual}
@@ -525,6 +555,7 @@ export default function ConsultarProductos() {
                 onChangeExacto={setExacto}
                 onBuscarRapido={() => handleBuscarProductosRapido(true)}
                 onNuevo={openModal}
+                onAjusteMasivo={handleAbrirAjusteMasivo}
                 total={entidadesTotales}
                 mostrados={productos.length}
                 paginaActual={paginaActual}
@@ -596,6 +627,7 @@ export default function ConsultarProductos() {
         mostrarCambioPrecios={mostrarCambioPrecios}
         mostrarProductosAlternativos={mostrarProductosAlternativos}
         mostrarDeQuienEsAlternativo={mostrarDeQuienEsAlternativo}
+        mostrarAjusteMasivo={mostrarAjusteMasivo}
 
         productoSeleccionado={productoSeleccionado}
         productoInfo={productoInfo}
@@ -609,9 +641,11 @@ export default function ConsultarProductos() {
         onCloseCambioPrecios={handleCerrarCambioPrecios}
         onCloseProductosAlternativos={handleCerrarProductosAlternativos}
         onCloseDeQuienEsAlternativo={handleCerrarDeQuienEsAlternativo}
+        onCloseAjusteMasivo={handleCerrarAjusteMasivo}
 
         onSuccessAlta={handleSuccess}
         onSuccessActualizar={handleActualizarSuccess}
+        onSuccessAjusteMasivo={handleAjusteMasivoSuccess}
         onRefetch={() => cargarConsulta()}
       />
 

@@ -1,30 +1,35 @@
 import { Producto } from "../../../../interfaces/gestion-producto/producto/interfaces-producto";
 import InformacionAuditoria from "../../../herramientas/reutilizables/informacion-auditoria";
 import RegistrarActualizarProductoForm from "../utils/registrar-actualizar-producto";
+import FormularioAjusteMasivo from "../../precios/actualizacion-masiva/utils/formulario-ajuste-masivo";
+import HistorialPrecioProductoComponent from "../../precios/historial-precio/consultar-historial-precio-producto";
 
 interface Props {
   isAltaOpen: boolean;
   mostrarActualizarProducto: boolean;
-    mostrarInfoAuditoria: boolean;
-    mostrarMovimientosStock: boolean;
-    mostrarHistorialPrecios: boolean;
-    mostrarCambioPrecios: boolean;
-    mostrarProductosAlternativos: boolean;
-    mostrarDeQuienEsAlternativo: boolean;
-    productoSeleccionado: Producto | null;
-    productoInfo: any;
-    auditoria: any;
+  mostrarInfoAuditoria: boolean;
+  mostrarMovimientosStock: boolean;
+  mostrarHistorialPrecios: boolean;
+  mostrarCambioPrecios: boolean;
+  mostrarProductosAlternativos: boolean;
+  mostrarDeQuienEsAlternativo: boolean;
+  mostrarAjusteMasivo: boolean;
+  productoSeleccionado: Producto | null;
+  productoInfo: any;
+  auditoria: any;
   onCloseAlta: () => void;
-    onCloseActualizar: () => void;
-    onCloseAuditoria: () => void;
-    onCloseMovimientosStock: () => void;
-    onCloseHistorialPrecios: () => void;
-    onCloseCambioPrecios: () => void;
-    onCloseProductosAlternativos: () => void;
-    onCloseDeQuienEsAlternativo: () => void;
+  onCloseActualizar: () => void;
+  onCloseAuditoria: () => void;
+  onCloseMovimientosStock: () => void;
+  onCloseHistorialPrecios: () => void;
+  onCloseCambioPrecios: () => void;
+  onCloseProductosAlternativos: () => void;
+  onCloseDeQuienEsAlternativo: () => void;
+  onCloseAjusteMasivo: () => void;
   onSuccessAlta: (mensaje: string, producto?: Producto) => void;
-    onSuccessActualizar: (mensaje: string) => void;
-    onRefetch: () => void;
+  onSuccessActualizar: (mensaje: string) => void;
+  onSuccessAjusteMasivo: (mensaje: string) => void;
+  onRefetch: () => void;
 }
 
 export function ProductosModales({
@@ -36,6 +41,7 @@ export function ProductosModales({
   mostrarCambioPrecios,
   mostrarProductosAlternativos,
   mostrarDeQuienEsAlternativo,
+  mostrarAjusteMasivo,
   productoSeleccionado,
   productoInfo,
   auditoria,
@@ -47,18 +53,17 @@ export function ProductosModales({
   onCloseCambioPrecios,
   onCloseProductosAlternativos,
   onCloseDeQuienEsAlternativo,
+  onCloseAjusteMasivo,
   onSuccessAlta,
   onSuccessActualizar,
+  onSuccessAjusteMasivo,
   onRefetch,
 }: Props) {
   return (
     <>
       {isAltaOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <RegistrarActualizarProductoForm
-            onClose={onCloseAlta}
-            onSuccess={onSuccessAlta}
-          />
+          <RegistrarActualizarProductoForm onClose={onCloseAlta} onSuccess={onSuccessAlta} />
         </div>
       )}
 
@@ -78,7 +83,15 @@ export function ProductosModales({
         </div>
       )}
 
-
+      {mostrarHistorialPrecios && productoInfo && (
+        <HistorialPrecioProductoComponent
+          producto={productoInfo}
+          onClose={onCloseHistorialPrecios}
+        />
+      )}
+      {mostrarAjusteMasivo && (
+        <FormularioAjusteMasivo onClose={onCloseAjusteMasivo} onSuccess={onSuccessAjusteMasivo} />
+      )}
     </>
   );
 }

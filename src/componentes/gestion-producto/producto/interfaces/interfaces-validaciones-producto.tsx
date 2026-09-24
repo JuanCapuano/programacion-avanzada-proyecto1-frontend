@@ -7,6 +7,12 @@ import { ItemProdAlternativo } from "../../../../interfaces/gestion-producto/pro
 
 //===================== interfaces para las cosas que se van a ingresar en el formulario y es necesario validarlas ==========//
 
+// Debe coincidir con el enum UnidadMedida del backend (value object Presentacion, DDD).
+export const UNIDADES_MEDIDA = ["l", "ml", "cc", "kg", "g", "un", "pack"] as const;
+
+// Debe coincidir con PORCENTAJE_MARGEN_DEFAULT del backend: si no se ingresa un porcentaje, el backend aplica este valor.
+export const PORCENTAJE_DEFAULT = 15;
+
 export interface FormValues {
   denominacion: string;
   observacion?: string | null;
@@ -15,8 +21,9 @@ export interface FormValues {
   codigoBarra?: string | null;
   stock?: number | null;
   costo?: number | null;
-  precio?: number | null;
   porcentaje?: number | null;
+  presentacionCantidad?: number | null;
+  presentacionUnidad?: string | null;
   /* costoEnDolar?: boolean | null;
   costoDolar?: number | null;
   destacado?: boolean | null;
@@ -24,13 +31,14 @@ export interface FormValues {
   lineaId: number;
   marcaId: number;
   /* subLineaId?: number | null */
-  alicuotaIva: number | null;
+  alicuotaIva?: number | null;
   /* ubicacion?: string | null;
   presentacionId: number; */
   stockMinimo?: number;
   cantidadPorPack?: number;
   utilizaStockMinimo?: boolean;
   utilizaPack?: boolean;
+  motivo?: string | null;
  /*  porcentajeOcasional: number;
   precioOcasional: number;
   porcentajeMayorista: number;
@@ -65,12 +73,23 @@ export const schema = (utilizaStockMinimo: boolean, utilizaPack: boolean, usaOfe
     codigoBarra: yup.string().optional().max(255, "Máximo 255 caracteres.").nullable(),
     stock: yup.number().optional().nullable(),
     costo: yup.number().typeError("El costo debe ser un valor númerico").required("El costo es obligatorio").min(0,"El costo debe ser mayor o igual a 0"),
-    precio: yup.number().typeError("El precio debe ser un valor númerico").required("El precio es obligatorio").min(0,"El costo debe ser mayor o igual a 0").test("precio-mayor-o-igual-costo","El precio debe ser mayor o igual que el costo", function(value){
+    /*precio: yup.number().typeError("El precio debe ser un valor númerico").required("El precio es obligatorio").min(0,"El costo debe ser mayor o igual a 0").test("precio-mayor-o-igual-costo","El precio debe ser mayor o igual que el costo", function(value){
       const {costo} = this.parent;
       if (value==null || costo == null ) return true;
       return value>= costo;
-    }),
+
+    }),*/
+    motivo: yup.string().optional().nullable().max(500, "Máximo 500 caracteres."),
     porcentaje: yup.number().typeError("El porcentaje debe ser un valor númerico").min(0,"El porcentaje mínimo debe ser mayor o igual a 0").max(999, "El porcentaje máximo permitido es de 999").optional().nullable(),
+    presentacionCantidad: yup
+      .number()
+      .typeError("La cantidad de la presentación debe ser un número.")
+      .required("La cantidad de la presentación debe ser un número.")
+      .positive("La cantidad de la presentación debe ser mayor a 0."),
+    presentacionUnidad: yup
+      .string()
+      .oneOf(UNIDADES_MEDIDA, `La unidad de la presentación debe ser una de: ${UNIDADES_MEDIDA.join(", ")}.`)
+      .required(`La unidad de la presentación debe ser una de: ${UNIDADES_MEDIDA.join(", ")}.`),
     /* costoEnDolar: yup.boolean().optional().nullable(),
     costoDolar: yup.number().optional().nullable(),
     destacado: yup.boolean().optional().nullable(),
@@ -87,11 +106,12 @@ export const schema = (utilizaStockMinimo: boolean, utilizaPack: boolean, usaOfe
       .required("La línea es obligatoria.")
       .transform((value, originalValue) => (originalValue === "" ? null : value)) // Si el valor es una cadena vacía, lo convierte en null.
       .required("La linea es obligatoria."),
+
     alicuotaIva: yup
       .number()
-      .oneOf(Object.values(AlicuotaIva), "Alicuota IVA inválida")
-      .required("La alícuota IVA es obligatoria.")
-      .nullable(),
+      .optional()
+      .nullable()
+      .default(21),
     /* ubicacion: yup.string().optional().max(255, "Máximo 255 caracteres.").nullable(),
     presentacionId: yup
       .number()
@@ -164,8 +184,9 @@ export const transformData = (producto: Producto): FormValues => {
     codigoBarra: producto.codigoBarra ?? null,
     stock: producto.stock ?? null,
     costo: producto.costo ?? null,
-    precio: producto.precio ?? null,
     porcentaje: producto.porcentaje ?? null,
+    presentacionCantidad: producto.presentacionCantidad ?? null,
+    presentacionUnidad: producto.presentacionUnidad ?? null,
    // oferta: producto.oferta ?? null,
     /* costoEnDolar: producto.costoEnDolar ?? null,
     costoDolar: producto.costoDolar ?? null,

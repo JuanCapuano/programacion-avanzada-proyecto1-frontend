@@ -35,10 +35,10 @@ const ProductoService = {
       const token = localStorage.getItem("Token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-      console.log(">> PATCH iniciado a:", `${apiUrl}/producto/${id}/precios`);
+      console.log(">> PATCH iniciado a:", `${apiUrl}/producto/${id}/precio`);
       console.log(">> Payload PATCH:", payload);
 
-      const result = await axios.patch(`${apiUrl}/producto/${id}/precios`, payload, { headers });
+      const result = await axios.patch(`${apiUrl}/producto/${id}/precio`, payload, { headers });
       console.log(">> PATCH terminado con éxito:", result);
       return result;
     } catch (error) {
@@ -128,6 +128,27 @@ const ProductoService = {
     );
     return data;
   },
+
+  previsualizarDenominacion: async (marcaId: number, lineaId: number, presentacionCantidad?: number, presentacionUnidad?: string) => {
+    const token = localStorage.getItem("Token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const params: any = {marcaId, lineaId};
+    if (presentacionCantidad !== undefined) params.presentacionCantidad = presentacionCantidad;
+    if (presentacionUnidad) params.presentacionUnidad = presentacionUnidad;
+
+    const { data } = await axios.get(`${apiUrl}/producto/denominacion/previsualizar`, { headers, params });
+    return data as { denominacion: string };
+  },
+
+  restaurarDenominacion: async (id: number, usuarioId: number) => {
+    const token = localStorage.getItem("Token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const { data } = await axios.patch(`${apiUrl}/producto/${id}/restaurar-denominacion?usuarioId=${usuarioId}`, {}, { headers });
+    return data;
+    },
+
 };
+
 
 export default ProductoService;
