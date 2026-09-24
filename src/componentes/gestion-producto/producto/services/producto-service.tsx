@@ -13,6 +13,9 @@ const baseService = createCrudService<FormValues>("producto");
 const ProductoService = {
   ...baseService,
 
+  obtenerCatalogo: (filtros: { texto?: string; skip: number; take: number }) =>
+    ApiService.get('/producto/search-catalogo', filtros),
+
   
   obtenerMobile: async (filtros: any) => {
     try {

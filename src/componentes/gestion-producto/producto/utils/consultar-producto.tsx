@@ -1,3 +1,4 @@
+import { FiltrosCatalogoProductos, FiltrosCatalogo } from "../componentes/filtros-catalogo";
 import { useState, useEffect, useRef } from "react";
 import { Info, Pencil, Trash, Box, CircleDollarSign, Shuffle, Star } from "lucide-react";
 import { Button } from "../../../ui/Button";
@@ -35,6 +36,9 @@ import { puedeHacerAcciones } from "../domain/permisos-producto";
 
 
 export default function ConsultarProductos() {
+  const consultaActiva = useRef<{ tipo: "panel" | "rapida" | "catalogo"; filtros: Record<string, unknown> }>({ tipo: "panel", filtros: {} });
+  const ultimaPeticion = useRef(0);
+  const [resumenCatalogo, setResumenCatalogo] = useState<string | null>(null);
   const [productos, setProductos] = useState<ConsultarProducto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -342,7 +346,7 @@ export default function ConsultarProductos() {
       duration: 3000,
     });
 
-    await handleBuscarProductos();
+    await cargarConsulta();
   };
 
   const handleCerrarProductosAlternativos = () => {
@@ -383,27 +387,7 @@ export default function ConsultarProductos() {
       duration: 3000,
     });
 
-    setLoading(true);
-
-    const filtrosConPaginacion = {
-      denominacion: valoresFiltros.denominacion,
-      codigoProveedor: valoresFiltros.codigoProveedor,
-      codigoReferencia: valoresFiltros.codigoReferencia,
-      lineaId: valoresFiltros.lineaId,
-      marcaId: valoresFiltros.marcaId,
-      proveedorId: valoresFiltros.proveedorId,
-      conStock: valoresFiltros.conStock,
-      codReferenciaExacto: valoresFiltros.codReferenciaExacto,
-      codProveedorExacto: valoresFiltros.codProveedorExacto,
-      skip: skip,
-      take: take,
-    };
-
-    const productosFiltrados = await ProductoService.obtener(filtrosConPaginacion);
-
-    setEntidadesTotales(productosFiltrados.total);
-    setProductos(productosFiltrados.data);
-    setLoading(false);
+    await cargarConsulta();
   };
 
   const handleActualizarSuccess = async (mensajeAlerta: string) => {
@@ -417,20 +401,44 @@ export default function ConsultarProductos() {
       duration: 3000,
     });
 
-    setLoading(true);
+    await cargarConsulta();
+  };
 
-    await handleBuscarProductos();
+  const cargarConsulta = async (desde = skip) => {
+    const peticion = ++ultimaPeticion.current;
+    setLoading(true);
+    setError(null);
+    const { tipo, filtros } = consultaActiva.current;
+    try {
+      const parametros = { ...filtros, skip: desde, take };
+      const resultado = tipo === "catalogo"
+        ? await ProductoService.obtenerCatalogo(parametros)
+        : tipo === "rapida"
+          ? await ProductoService.obtenerRapido(parametros)
+          : await ProductoService.obtener(parametros);
+      if (peticion !== ultimaPeticion.current) return;
+      setProductos(resultado.data);
+      setEntidadesTotales(resultado.total);
+    } catch {
+      if (peticion === ultimaPeticion.current) setError("No se pudieron buscar los productos. Intentá nuevamente.");
+    } finally {
+      if (peticion === ultimaPeticion.current) setLoading(false);
+    }
+  };
+
+  const handleBuscarCatalogo = (filtros: FiltrosCatalogo) => {
+    const texto = filtros.texto.trim();
+    consultaActiva.current = { tipo: "catalogo", filtros: { texto } };
+    setResumenCatalogo(texto ? `Texto: ${texto}` : "Todos los productos");
+    setBusquedaRapida(false);
+    resetearPaginacion();
+    void cargarConsulta(0);
   };
 
   const handleBuscarProductos = async (botonBuscar?: boolean) => {
     setBusquedaRapida(false);
-    if (botonBuscar) {
-      resetearPaginacion();
-    }
-    setLoading(true);
-    setError(null);
-
-    const filtrosConPaginacion = {
+    setResumenCatalogo(null);
+    consultaActiva.current = { tipo: "panel", filtros: {
       denominacion: valoresFiltros.denominacion,
       codigoProveedor: valoresFiltros.codigoProveedor,
       codigoReferencia: valoresFiltros.codigoReferencia,
@@ -440,54 +448,24 @@ export default function ConsultarProductos() {
       marcaId: valoresFiltros.marcaId,
       proveedorId: valoresFiltros.proveedorId,
       conStock: valoresFiltros.conStock,
-      skip: skip,
-      take: take,
-    };
-
-    try {
-      const productosFiltrados = await ProductoService.obtener(filtrosConPaginacion);
-      setProductos(productosFiltrados.data);
-      setEntidadesTotales(productosFiltrados.total);
-    } catch (err) {
-      console.error("Error al obtener productos:", err);
-      setError("No se pudieron cargar los productos.");
-    } finally {
-      setLoading(false);
-    }
+    } };
+    if (botonBuscar) resetearPaginacion();
+    await cargarConsulta(botonBuscar ? 0 : skip);
   };
 
-  const handleBuscarProductosRapido = async (botonBuscar?: boolean) => {
+  const handleBuscarProductosRapido = async (botonBuscar = true) => {
     setBusquedaRapida(true);
-    if (botonBuscar) {
-      resetearPaginacion();
-    }
-    setLoading(true);
-    setError(null);
-
-    const filtrosConPaginacion = {
-      codigo: codigo,
-      exacto: exacto,
-      skip: skip,
-      take: take,
-    };
-
-    try {
-      const productosFiltrados = await ProductoService.obtenerRapido(filtrosConPaginacion);
-      setProductos(productosFiltrados.data);
-      setEntidadesTotales(productosFiltrados.total);
-    } catch (err) {
-      console.error("Error al obtener productos rápido:", err);
-      setError("No se pudieron cargar los productos.");
-    } finally {
-      setLoading(false);
-    }
+    setResumenCatalogo(null);
+    consultaActiva.current = { tipo: "rapida", filtros: { codigo, exacto } };
+    if (botonBuscar) resetearPaginacion();
+    await cargarConsulta(botonBuscar ? 0 : skip);
   };
 
   // MANEJO DE PAGINACION ===========================================
 
   useEffect(() => {
     if (filtrosInicializados === true) {
-      handleBuscarProductos();
+      void cargarConsulta();
     }
   }, [paginaActual, filtrosInicializados, take]);
 
@@ -538,16 +516,12 @@ export default function ConsultarProductos() {
     <div className="w-full">
       {/* Contenido Principal */}
       <div className="p-2">
+        <FiltrosCatalogoProductos onBuscar={handleBuscarCatalogo} loading={loading} />
+        {error && <p role="alert" className="mb-3 text-red-600">{error}</p>}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
             <p className="text-gray-600 dark:text-gray-400 text-lg">Cargando productos...</p>
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 max-w-md">
-              <p className="text-red-600 dark:text-red-400 text-center font-medium">{error}</p>
-            </div>
           </div>
         ) : (
           <>
@@ -591,7 +565,9 @@ export default function ConsultarProductos() {
               </div>
 
               <CardContent className="p-0">
-                <FiltrosAplicados />
+                {resumenCatalogo !== null
+                  ? <p role="status" className="px-3 py-2 text-sm">Búsqueda aplicada: {resumenCatalogo}</p>
+                  : <FiltrosAplicados />}
                 <DatosTabla
                   productos={productos}
                   columns={columns}
@@ -670,7 +646,7 @@ export default function ConsultarProductos() {
         onSuccessAlta={handleSuccess}
         onSuccessActualizar={handleActualizarSuccess}
         onSuccessAjusteMasivo={handleAjusteMasivoSuccess}
-        onRefetch={handleBuscarProductos}
+        onRefetch={() => cargarConsulta()}
       />
 
       {productoNotificacionSeleccionado && (

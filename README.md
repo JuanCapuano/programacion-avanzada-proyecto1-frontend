@@ -71,3 +71,16 @@ npm run dev
 # Producción
 npm run build
 ```
+
+
+## CR-004: búsqueda de catálogo
+
+Un campo superior busca coincidencias parciales en Denominación, Línea o SuperLínea (OR).
+Ignora mayúsculas y espacios exteriores. Buscar productos o Enter aplica el texto;
+Limpiar búsqueda muestra todos los productos. La paginación conserva la consulta aplicada.
+Usa `GET /api/producto/search-catalogo?texto=...`. El panel lateral y la búsqueda por código
+siguen independientes; el último botón utilizado determina la consulta mostrada.
+El acceso a Super Línea de CR-003 se conserva.
+
+Validación: `npm run build`, pruebas de API y prueba visual local.
+El chequeo completo de TypeScript conserva los 124 errores preexistentes de CR-003.
