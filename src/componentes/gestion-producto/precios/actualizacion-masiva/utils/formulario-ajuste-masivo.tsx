@@ -22,9 +22,16 @@ const ALCANCE_OPTIONS = [
 ];
 
 const TIPO_AJUSTE_OPTIONS = [
-  { value: "porcentaje" as const, label: "Porcentaje (%)" },
-  { value: "monto" as const, label: "Monto fijo ($)" },
+  { value: "costo_porcentual" as const, label: "Costo: aumentar o disminuir un porcentaje (%)" },
+  { value: "costo_monto" as const, label: "Costo: sumar o restar un monto fijo ($)" },
+  { value: "margen" as const, label: "Margen: asignar un nuevo valor (%)" },
 ];
+
+const LABEL_VALOR = {
+  costo_porcentual: "Porcentaje sobre el costo",
+  costo_monto: "Monto a sumar/restar al costo",
+  margen: "Nuevo margen",
+};
 
 export default function FormularioAjusteMasivo({ onClose, onSuccess }: Props) {
   const { alerts, addAlert, removeAlert } = useAlerts();
@@ -171,7 +178,7 @@ export default function FormularioAjusteMasivo({ onClose, onSuccess }: Props) {
 
                   <div className="flex flex-col gap-1">
                     <Label htmlFor="valor">
-                      {tipoAjuste === "porcentaje" ? "Porcentaje de ajuste" : "Monto de ajuste"}
+                      {LABEL_VALOR[tipoAjuste] ?? "Valor"}
                     </Label>
                     <Controller
                       name="valor"
@@ -183,8 +190,8 @@ export default function FormularioAjusteMasivo({ onClose, onSuccess }: Props) {
                           thousandSeparator="."
                           decimalSeparator=","
                           decimalScale={2}
-                          suffix={tipoAjuste === "porcentaje" ? " %" : undefined}
-                          prefix={tipoAjuste === "monto" ? "$ " : undefined}
+                          suffix={tipoAjuste === "costo_porcentual" || tipoAjuste === "margen" ? " %" : undefined}
+                          prefix={tipoAjuste === "costo_monto" ? "$ " : undefined}
                           allowNegative
                           onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
                           className="w-full text-right p-2 border border-gray-300 bg-white rounded-md text-black"
@@ -199,7 +206,11 @@ export default function FormularioAjusteMasivo({ onClose, onSuccess }: Props) {
                   <section className="space-y-3">
                     <h3 className="text-sm font-semibold text-gray-700">Vista previa</h3>
 
-                    {!todosValidos && (
+                    {preview.length === 0 && (
+                      <p className="text-sm text-red-800">No hay productos en el alcance seleccionado.</p>
+                    )}
+
+                    {preview.length > 0 && !todosValidos && (
                       <p className="text-sm text-red-800">
                         {preview.filter((p) => !p.valido).length} de {preview.length} productos quedarían con precio
                         inválido.
@@ -212,6 +223,10 @@ export default function FormularioAjusteMasivo({ onClose, onSuccess }: Props) {
               </CardContent>
 
               <CardFooter className="flex justify-end gap-2 px-6 py-4 border-t border-gray-100">
+                {!preview && (
+                  <p className="mr-auto text-sm text-gray-600">Debe previsualizar los cambios antes de confirmar.</p>
+                )}
+
                 {!preview && (
                   <Button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white" disabled={loadingPreview}>
                     {loadingPreview ? "Previsualizando..." : "Previsualizar"}
