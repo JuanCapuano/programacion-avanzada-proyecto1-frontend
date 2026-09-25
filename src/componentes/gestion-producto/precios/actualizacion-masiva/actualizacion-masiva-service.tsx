@@ -5,7 +5,7 @@ import { PreviewProductoAjusteMasivo } from "../../../../interfaces/gestion-prod
 const apiUrl = axiosConfig.apiUrl;
 
 export interface AjusteMasivoPrecioPayload {
-  tipoAjuste: "porcentaje" | "monto";
+  tipoAjuste: "costo_porcentual" | "costo_monto" | "margen";
   valor: number;
   alcance: "linea" | "global";
   lineaId?: number;
@@ -26,7 +26,7 @@ const ActualizacionMasivaService = {
   },
 
   confirmar: async (payload: AjusteMasivoPrecioPayload) => {
-    const { data } = await axios.put(`${apiUrl}/producto/precios/actualizacion-masiva`, payload, {
+    const { data } = await axios.post(`${apiUrl}/producto/precios/actualizacion-masiva`, payload, {
       headers: getAuthHeaders(),
     });
     return data;

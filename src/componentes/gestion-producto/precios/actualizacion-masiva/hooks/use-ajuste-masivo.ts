@@ -14,7 +14,7 @@ export function useAjusteMasivo() {
   // ===================== FORM =====================
   const methods = useForm<FormValues>({
     resolver: yupResolver(schema),
-    defaultValues: { alcance: "global", tipoAjuste: "porcentaje", valor: 0 },
+    defaultValues: { valor: 0 },
   });
 
   const { watch, setValue } = methods;
@@ -52,9 +52,9 @@ export function useAjusteMasivo() {
   }, [alcance, setValue]);
 
   const todosValidos = !!preview && preview.length > 0 && preview.every((p) => p.valido);
-  // Previsualizar es opcional: Confirmar está habilitado por defecto y solo se
-  // bloquea si el usuario ya previsualizó y el resultado vino con productos inválidos.
-  const puedeConfirmar = !preview || todosValidos;
+  // Previsualizar es obligatorio: Confirmar solo se habilita con una previsualización
+  // vigente y sin productos inválidos (cambiar el formulario la descarta).
+  const puedeConfirmar = todosValidos;
 
   // ===================== SUBMIT =====================
   const armarPayload = (formData: FormValues): AjusteMasivoPrecioPayload => ({
