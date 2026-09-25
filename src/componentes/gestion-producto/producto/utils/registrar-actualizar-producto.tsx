@@ -79,8 +79,8 @@ export default function RegistrarActualizarProductoForm({
   const [marcas, setMarcas] = React.useState<SelectMarca[]>([]);
   const [lineas, setLineas] = React.useState<SelectLinea[]>([]);
   
-  const [denominacionMarca, setDenominacionMarca] = useState(" ");
-  const [denominacionLinea, setDenominacionLinea] = useState(" ");
+  const [denominacionMarca, setDenominacionMarca] = useState("");
+  const [denominacionLinea, setDenominacionLinea] = useState("");
   const [selectedLinea, setSelectedLinea] = React.useState<SelectLinea>();
   const [selectedMarca, setSelectedMarca] = React.useState<SelectMarca>();
   const [mostrarFormularioLinea, setMostrarFormularioLinea] = useState(false);
@@ -152,6 +152,20 @@ export default function RegistrarActualizarProductoForm({
       setDenominacionEditadaManualmente(false);
     }
   }, [denominacion]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleBuscarPorDenominacion("LINEA");
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [denominacionLinea]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleBuscarPorDenominacion("MARCA");
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [denominacionMarca]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -302,6 +316,10 @@ export default function RegistrarActualizarProductoForm({
   const handleBuscarPorDenominacion = async (select: string) => {
     try {
       if (select === "LINEA") {
+        if (!denominacionLinea.trim()) {
+          setLineas([]); 
+          return;
+        }
         const lineas = await ProductoService.obtenerTotales({ denominacion: denominacionLinea }, "lineas");
         if (lineas) {
           console.log("Lineas encontradas:", lineas);
@@ -311,6 +329,10 @@ export default function RegistrarActualizarProductoForm({
         }
       }
       if (select === "MARCA") {
+        if (!denominacionMarca.trim()) {
+          setMarcas([]); // ← limpiar si está vacío
+          return;
+        }
         const marcas = await ProductoService.obtenerTotales({ denominacion: denominacionMarca }, "marcas");
         if (marcas) {
           console.log("Marcas encontradas:", marcas);
@@ -324,11 +346,6 @@ export default function RegistrarActualizarProductoForm({
       console.error("Error al buscar por código:", error);
     }
   };
-
-  useEffect(() => {
-    handleBuscarPorDenominacion("LINEA");
-    handleBuscarPorDenominacion("MARCA");
-  }, []);
 
   const handleEnterEnSelect = async (e: React.KeyboardEvent<HTMLInputElement>, select: string) => {
     if (e.key === "Enter") {
@@ -497,7 +514,21 @@ export default function RegistrarActualizarProductoForm({
               <section className="border border-gray-200 rounded-lg p-4">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Clasificación</h3>
 
-                  <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-4">
+                {/* Línea */}
+                <div className="flex gap-2 items-end">
+                  <div className="flex-shrink-0 border border-gray-300 rounded-md p-3 bg-gray-50">
+                    <label className="text-sm font-medium text-gray-700 block mb-1">Buscar Línea</label>
+                    <input
+                      type="text"
+                      placeholder="Nombre..."
+                      value={denominacionLinea}
+                      onChange={(e) => setDenominacionLinea(e.target.value)}
+                      className="w-40 p-2 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-800"   
+                    />  
+                  </div>
+
+                  <div className="flex-1">
                     <LineasSelector
                       denominacionLinea={denominacionLinea}
                       setDenominacionLinea={setDenominacionLinea}
@@ -516,24 +547,43 @@ export default function RegistrarActualizarProductoForm({
                       }}
                       onAgregarLinea={() => setMostrarFormularioLinea(true)}
                     />
-
-                  <MarcasSelector
-                    denominacionMarca={denominacionMarca}
-                    setDenominacionMarca={setDenominacionMarca}
-                    denominacionMarcaRef={denominacionMarcaRef}
-                    selectMarcaRef={selectMarcaRef}
-                    marcas={marcas}
-                    selectedMarca={selectedMarca}
-                    marcaId={watch("marcaId")}
-                    disabled={producto && producto.sistema > 0}
-                    error={errors.marcaId?.message}
-                    onEnterMarca={(e) => handleEnterEnSelect(e, "MARCA")}
-                    onChangeMarca={(marca) => {
-                      methods.setValue("marcaId", marca?.id || 0);
-                    }}
-                    onAgregarMarca={() => setMostrarFormularioMarca(true)}
-                  />
+                  </div>
                 </div>
+
+                {/* Marca */}
+                <div className="flex gap-2 items-end">
+                  <div className="flex-shrink-0 border border-gray-300 rounded-md p-3 bg-gray-50">
+                    <label className="text-sm font-medium text-gray-700 block mb-1">Buscar Marca</label>
+                    <input
+                      type="text"
+                      placeholder="Nombre..."
+                      value={denominacionMarca}
+                      onChange={(e) => setDenominacionMarca(e.target.value)}
+                      className="w-40 p-2 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-800"
+                    />
+                  </div>
+
+                  <div className="flex-1">
+                    <MarcasSelector
+                      denominacionMarca={denominacionMarca}
+                      setDenominacionMarca={setDenominacionMarca}
+                      denominacionMarcaRef={denominacionMarcaRef}
+                      selectMarcaRef={selectMarcaRef}
+                      marcas={marcas}
+                      selectedMarca={selectedMarca}
+                      marcaId={watch("marcaId")}
+                      disabled={producto && producto.sistema > 0}
+                      error={errors.marcaId?.message}
+                      onEnterMarca={(e) => handleEnterEnSelect(e, "MARCA")}
+                      onChangeMarca={(marca) => {
+                        methods.setValue("marcaId", marca?.id || 0);
+                      }}
+                      onAgregarMarca={() => setMostrarFormularioMarca(true)}
+                    />
+                  </div>
+                </div>
+              </div>
+
               </section>
 
               {/* ===== Costo y Porcentaje ===== */}
