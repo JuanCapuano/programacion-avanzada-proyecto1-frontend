@@ -70,7 +70,7 @@ export default function RegistrarActualizarLineaForm({
           setValue("observacion", linea.observacion || null);
           setValue("stockMinimo", linea.stockMinimo || 0);
           setValue("utilizaStockMinimo", linea.utilizaStockMinimo || false);
-          setValue("superLineaId", linea.superlinea?.id ?? null);
+          setValue("superLineaId", linea.superLinea?.id ?? null);
         }
       } catch (error) {
         console.error("Error al obtener los datos:", error);
