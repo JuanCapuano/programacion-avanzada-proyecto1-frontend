@@ -13,6 +13,19 @@ export const UNIDADES_MEDIDA = ["l", "ml", "cc", "kg", "g", "un", "pack"] as con
 // Debe coincidir con PORCENTAJE_MARGEN_DEFAULT del backend: si no se ingresa un porcentaje, el backend aplica este valor.
 export const PORCENTAJE_DEFAULT = 15;
 
+/**
+ * Espejo de Producto.calcularPrecioPara del backend (producto.entity.ts):
+ * precio = costo + (costo * porcentaje / 100). El precio lo sigue calculando y
+ * persistiendo el dominio (CR-007); acá se replica la fórmula sólo para
+ * previsualizarlo y para detectar si cambió antes de exigir el motivo.
+ * Un porcentaje 0 es válido (precio = costo), por eso se usa ?? y no ||.
+ */
+export function calcularPrecioProducto(costo?: number | null, porcentaje?: number | null): number {
+  const costoNumerico = costo ?? 0;
+  const porcentajeNumerico = porcentaje ?? 0;
+  return costoNumerico + (costoNumerico * porcentajeNumerico) / 100;
+}
+
 export interface FormValues {
   denominacion: string;
   observacion?: string | null;

@@ -19,7 +19,7 @@ import { useConfiguracionSistema } from "../../../sistema/ConfiguracionSistemaCo
 import { parseApiError } from "../../../../utils/errores";
 import { Layers } from "lucide-react";
 import RegistrarActualizarMarcaForm from "../../marca/utils/registrar-actualizar-marca";
-import { FormValues, schema, transformData, transformarItemsProdAlternativo, UNIDADES_MEDIDA, PORCENTAJE_DEFAULT } from "../interfaces/interfaces-validaciones-producto";
+import { FormValues, schema, transformData, transformarItemsProdAlternativo, UNIDADES_MEDIDA, PORCENTAJE_DEFAULT, calcularPrecioProducto } from "../interfaces/interfaces-validaciones-producto";
 import LineasSelector from "../componentes/configuracion/lineas-selector";
 import EncabezadoFormularios from "../../../ui/encabezadoFormularios";
 import MarcasSelector from "../componentes/configuracion/marcas-selector";
@@ -99,9 +99,9 @@ export default function RegistrarActualizarProductoForm({
   const presentacionUnidad = watch("presentacionUnidad");
   const costo = watch("costo");
   const porcentaje = watch("porcentaje");
-  const precioCalculado = costo && porcentaje
-    ? (costo + (costo * porcentaje / 100)).toFixed(2)
-    : "0.00";
+  // El porcentaje vacío no es 0: en un alta el backend aplica PORCENTAJE_DEFAULT (ProductoService.create) y en una edición conserva el que ya tenía el producto (Producto.actualizarCostoYMargen).
+  const porcentajeEfectivo = porcentaje ?? (producto ? producto.porcentaje ?? 0 : PORCENTAJE_DEFAULT);
+  const precioCalculado = calcularPrecioProducto(costo, porcentajeEfectivo).toFixed(2);
 
   //=============================== CONSTANTES PARA MOVIMIENTO ENTRE CAMPOS ==================================
   const denominacionProductoRef = useRef<HTMLInputElement>(null);
@@ -254,9 +254,10 @@ export default function RegistrarActualizarProductoForm({
 
     if (producto) {
       const { motivo, ...formDataSinMotivo } = formData;   // CR-007: el precio no se edita, se deriva de costo y porcentaje. Se calcula igual que el backend (Producto.calcularPrecio) para saber si cambió y, en ese caso, exigir el motivo.
-      const costoNuevo = formData.costo ?? 0;
-      const porcentajeNuevo = formData.porcentaje ?? 0;
-      const precioNuevo = costoNuevo + (costoNuevo * porcentajeNuevo) / 100;
+      const precioNuevo = calcularPrecioProducto(
+        formData.costo,
+        formData.porcentaje ?? producto.porcentaje ?? 0,
+      );
       const precioCambio = Math.round(precioNuevo * 1e5) !== Math.round(precioOriginal.current * 1e5); // Se compara a 5 decimales, la misma escala con la que el backend guarda el precio.
 
       if (precioCambio && !motivo?.trim()) {
