@@ -428,8 +428,13 @@ export default function ConsultarProductos() {
 
   const handleBuscarCatalogo = (filtros: FiltrosCatalogo) => {
     const texto = filtros.texto.trim();
-    consultaActiva.current = { tipo: "catalogo", filtros: { texto } };
-    setResumenCatalogo(texto ? `Texto: ${texto}` : "Todos los productos");
+    consultaActiva.current = { tipo: "catalogo", filtros: { ...filtros, texto } };
+    const campos = [
+      filtros.buscarDenominacion && 'Denominación',
+      filtros.buscarLinea && 'Línea',
+      filtros.buscarSuperLinea && 'SuperLínea',
+    ].filter(Boolean).join(', ');
+    setResumenCatalogo(texto ? `Texto: ${texto} · Buscar en: ${campos}` : "Todos los productos");
     setBusquedaRapida(false);
     resetearPaginacion();
     void cargarConsulta(0);
