@@ -76,6 +76,10 @@ npm run build
 ## CR-004: búsqueda de catálogo
 
 Un campo superior busca coincidencias parciales en Denominación, Línea o SuperLínea (OR).
+Debajo del campo, tres casillas permiten elegir dónde buscar. Inicialmente están todas marcadas.
+La selección se aplica con Buscar productos o Enter y se conserva al paginar.
+Sin ninguna casilla marcada se deshabilita Buscar productos y aparece un aviso.
+Limpiar búsqueda también vuelve a activar las tres casillas.
 Ignora mayúsculas y espacios exteriores. Buscar productos o Enter aplica el texto;
 Limpiar búsqueda muestra todos los productos. La paginación conserva la consulta aplicada.
 Usa `GET /api/producto/search-catalogo?texto=...`. El panel lateral y la búsqueda por código
