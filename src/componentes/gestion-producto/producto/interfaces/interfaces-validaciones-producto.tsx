@@ -13,6 +13,19 @@ export const UNIDADES_MEDIDA = ["l", "ml", "cc", "kg", "g", "un", "pack"] as con
 // Debe coincidir con PORCENTAJE_MARGEN_DEFAULT del backend: si no se ingresa un porcentaje, el backend aplica este valor.
 export const PORCENTAJE_DEFAULT = 15;
 
+/**
+ * Espejo de Producto.calcularPrecioPara del backend (producto.entity.ts):
+ * precio = costo + (costo * porcentaje / 100). El precio lo sigue calculando y
+ * persistiendo el dominio (CR-007); acá se replica la fórmula sólo para
+ * previsualizarlo y para detectar si cambió antes de exigir el motivo.
+ * Un porcentaje 0 es válido (precio = costo), por eso se usa ?? y no ||.
+ */
+export function calcularPrecioProducto(costo?: number | null, porcentaje?: number | null): number {
+  const costoNumerico = costo ?? 0;
+  const porcentajeNumerico = porcentaje ?? 0;
+  return costoNumerico + (costoNumerico * porcentajeNumerico) / 100;
+}
+
 export interface FormValues {
   denominacion: string;
   observacion?: string | null;
@@ -31,13 +44,14 @@ export interface FormValues {
   lineaId: number;
   marcaId: number;
   /* subLineaId?: number | null */
-  alicuotaIva: number | null;
+  alicuotaIva?: number | null;
   /* ubicacion?: string | null;
   presentacionId: number; */
   stockMinimo?: number;
   cantidadPorPack?: number;
   utilizaStockMinimo?: boolean;
   utilizaPack?: boolean;
+  motivo?: string | null;
  /*  porcentajeOcasional: number;
   precioOcasional: number;
   porcentajeMayorista: number;
@@ -71,7 +85,14 @@ export const schema = (utilizaStockMinimo: boolean, utilizaPack: boolean, usaOfe
     codigoReferencia: yup.string().optional().nullable(),
     codigoBarra: yup.string().optional().max(255, "Máximo 255 caracteres.").nullable(),
     stock: yup.number().optional().nullable(),
-    costo: yup.number().typeError("El costo debe ser un valor númerico").required("El costo es obligatorio").min(0,"El costo debe ser mayor o igual a 0"),
+    costo: yup.number().typeError("El costo debe ser un valor númerico").required("El costo es obligatorio").moreThan(0, "El costo debe ser mayor a 0"),
+    /*precio: yup.number().typeError("El precio debe ser un valor númerico").required("El precio es obligatorio").min(0,"El costo debe ser mayor o igual a 0").test("precio-mayor-o-igual-costo","El precio debe ser mayor o igual que el costo", function(value){
+      const {costo} = this.parent;
+      if (value==null || costo == null ) return true;
+      return value>= costo;
+
+    }),*/
+    motivo: yup.string().optional().nullable().max(500, "Máximo 500 caracteres."),
     porcentaje: yup.number().typeError("El porcentaje debe ser un valor númerico").min(0,"El porcentaje mínimo debe ser mayor o igual a 0").max(999, "El porcentaje máximo permitido es de 999").optional().nullable(),
     presentacionCantidad: yup
       .number()
@@ -98,11 +119,12 @@ export const schema = (utilizaStockMinimo: boolean, utilizaPack: boolean, usaOfe
       .required("La línea es obligatoria.")
       .transform((value, originalValue) => (originalValue === "" ? null : value)) // Si el valor es una cadena vacía, lo convierte en null.
       .required("La linea es obligatoria."),
+
     alicuotaIva: yup
       .number()
-      .oneOf(Object.values(AlicuotaIva), "Alicuota IVA inválida")
-      .required("La alícuota IVA es obligatoria.")
-      .nullable(),
+      .optional()
+      .nullable()
+      .default(21),
     /* ubicacion: yup.string().optional().max(255, "Máximo 255 caracteres.").nullable(),
     presentacionId: yup
       .number()

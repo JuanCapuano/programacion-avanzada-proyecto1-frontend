@@ -1,7 +1,5 @@
 import { Column, TablaAGGrid } from "../../../herramientas/tablas/tabla-flexible-ag-grid";
 import { ConsultarProducto, Producto} from "../../../../interfaces/gestion-producto/producto/interfaces-producto";
-import { ActionButton } from "../../../herramientas/reutilizables/action-button";
-import { Info, Pencil, Trash } from "lucide-react";
 import { ProductoActions } from "./producto-action";
 
 interface Props {
@@ -11,7 +9,7 @@ interface Props {
   onEditar: (id: number) => void;
   onInfo: (id: number) => void;
   onDelete: (id: number) => void;
-  
+  onHistorial: (id: number) => void;
 }
 
 export function DatosTabla({
@@ -21,7 +19,7 @@ export function DatosTabla({
   onEditar,
   onInfo,
   onDelete,
-  ...actions
+  onHistorial,
 }: Props) {
   return (
     <div className="hidden lg:block overflow-x-auto">
@@ -35,12 +33,14 @@ export function DatosTabla({
                   producto={row}
                   onEditar={onEditar}
                   onInfo={onInfo}
+                  onHistorial={onHistorial}
                   onDelete={onDelete}
+                  
                 />
               )
             : undefined
         }
-        actionsFlex={0.5}
+        actionsFlex={0.7}
         rowHeight={55}
       />
     </div>

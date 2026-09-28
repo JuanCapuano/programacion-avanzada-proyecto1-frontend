@@ -22,6 +22,7 @@ import {
   Smartphone,
   Bell,
   MessageSquare,
+  Layers2,
 } from "lucide-react";
 import { Rol } from "../../interfaces/generales/interfaces-generales";
 
@@ -65,6 +66,7 @@ export const menuItems: MenuItem[] = [
         subMenu: [
           { icon: Tag, label: "Marca", path: "marca" },
           { icon: Layers, label: "Líneas", path: "linea" },
+          {icon: Layers2, label: "Super Línea", path: "super-linea"},
         ],
         roles: [Rol.ADMINISTRADOR,Rol.ROOT,Rol.ROOT],
       },

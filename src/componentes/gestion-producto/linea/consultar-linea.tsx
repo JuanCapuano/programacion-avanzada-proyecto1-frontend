@@ -25,7 +25,7 @@ import { FiltrosLinea, FiltrosLineaValues } from "./componentes/filtros-linea";
 import LineaService from "./services/linea-service";
 import RegistrarActualizarLineaForm from "./utils/registrar-actualizar-linea";
 
-export default function ConsultarSuperlinea() {
+export default function ConsultarLinea() {
   const [lineas, setLineas] = useState<Linea[]>([]);
   const [loading, setLoading] = useState(false);
   const [error] = useState<string | null>(null);
@@ -259,6 +259,14 @@ export default function ConsultarSuperlinea() {
       header: "Denominación",
       accessor: "denominacion",
       ...denominacionNotScrollColumnProps,
+    },
+    {
+      header: "Super Línea",
+      accessor: "superLinea",
+      flex: 1,
+      formatFunction: ({ row }) => (
+        <span>{row.superLinea?.denominacion ?? <span className="text-gray-400 italic">Sin asignar</span>}</span>
+      ),
     },
     {
       header: "Observación",

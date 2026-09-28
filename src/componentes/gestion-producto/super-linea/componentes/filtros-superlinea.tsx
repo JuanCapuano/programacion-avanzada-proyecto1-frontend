@@ -1,0 +1,3 @@
+export { FiltrosSimple as FiltrosSuperlinea } from "../../../herramientas/reutilizables/filtros-simple";
+
+export type { FiltrosSimpleValues as FiltrosSuperlineaValues } from "../../../herramientas/reutilizables/filtros-simple";

@@ -38,3 +38,25 @@ export interface ConsultarHistorialPrecios {
   precioOferta: number;
   precioOfertaNuevo: number;
 }
+
+/** Registro de historial de precio generado por cambio de costo/precio/margen */
+export interface HistorialPrecioProducto {
+  id: number;
+  productoId: number;
+  fecha: string;
+  motivo: string;
+  usuario: string;
+
+  precioAnterior: number;
+  costoAnterior: number;
+  costoDolarAnterior: number;
+  cotizacionDolarAnterior: number;
+  porcentajeAnterior: number;
+
+  precioNuevo: number;
+  costoNuevo: number;
+  costoDolarNuevo: number;
+  cotizacionDolarNuevo: number;
+  porcentajeNuevo: number;
+}
+
