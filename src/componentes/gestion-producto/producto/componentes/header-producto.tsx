@@ -1,19 +1,20 @@
-import { Package, PlusCircle, Search } from "lucide-react";
+import { DollarSign, Package, PlusCircle, Search } from "lucide-react";
 import { Button } from "../../../ui/Button";
 import { CardHeader, CardTitle } from "../../../ui/Card";
 import { Input } from "../../../ui/Input";
 import { EstadisticasSimples } from "../../../herramientas/reutilizables/estadisticas-simples";
 import { ImpresionForm } from "../../../herramientas/reutilizables/impresion-form";
-import { puedeAgregarProducto } from "../domain/permisos-producto";
+import { puedeAgregarProducto, puedeActualizarPreciosMasivo } from "../domain/permisos-producto";
 
 interface Props {
-  roles:number[];
+  roles: number[];
   codigo: string;
   exacto: boolean;
   onChangeCodigo: (value: string) => void;
   onChangeExacto: (value: boolean) => void;
   onBuscarRapido: () => void;
   onNuevo: () => void;
+  onAjusteMasivo: () => void;
   total: number;
   mostrados: number;
   paginaActual: number;
@@ -29,6 +30,7 @@ export function ProductosHeader({
   onChangeExacto,
   onBuscarRapido,
   onNuevo,
+  onAjusteMasivo,
   total,
   mostrados,
   paginaActual,
@@ -52,16 +54,12 @@ export function ProductosHeader({
               placeholder="Código..."
               className="text-black pl-10"
               onChange={(e) => onChangeCodigo(e.target.value)}
-             // onKeyDown={(e) => e.key === "Enter" && onBuscarRapido()}
+              // onKeyDown={(e) => e.key === "Enter" && onBuscarRapido()}
             />
           </div>
 
           <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={exacto}
-              onChange={(e) => onChangeExacto(e.target.checked)}
-            />
+            <input type="checkbox" checked={exacto} onChange={(e) => onChangeExacto(e.target.checked)} />
             Exacto
           </label>
         </div>
@@ -77,11 +75,17 @@ export function ProductosHeader({
           totalItems={total}
           currentPage={paginaActual}
         />
+        {puedeActualizarPreciosMasivo(roles) && (
+          <Button onClick={onAjusteMasivo} className="bg-blue-500 hover:bg-blue-700 text-white">
+            <DollarSign className="mr-2 h-4 w-4" />
+            Actualizar precios masivo
+          </Button>
+        )}
         {puedeAgregarProducto(roles) && (
-           <Button onClick={onNuevo} className="bg-blue-500 hover:bg-blue-700 text-white">
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Añadir
-        </Button>
+          <Button onClick={onNuevo} className="bg-blue-500 hover:bg-blue-700 text-white">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Añadir
+          </Button>
         )}
       </div>
     </CardHeader>

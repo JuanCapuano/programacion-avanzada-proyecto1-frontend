@@ -56,21 +56,6 @@ export default function EntidadSelectorBase<T extends EntidadBase>({
       </label>
 
       <div className="flex gap-x-4">
-        {/* Input */}
-        <div className="w-80">
-          <input
-            ref={denominacionRef}
-            type="text"
-            placeholder="Denominación"
-            value={denominacion}
-            onChange={(e) =>
-              setDenominacion(e.target.value.trimStart())
-            }
-            onKeyDown={onEnterInput}
-            disabled={disabled}
-            className="w-full border border-gray-300 bg-white text-black rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
 
         {/* Select */}
         <div ref={selectRef} className="w-full">
